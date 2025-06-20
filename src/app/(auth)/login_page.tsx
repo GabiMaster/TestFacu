@@ -1,7 +1,9 @@
 import ButtonComponent from '@/src/components/atoms/ButtonComponent';
-import imagePath from '@/src/constants/imagePath';
+import { COLOR } from '@/src/constants/colors';
+import { Icon } from '@/src/constants/icons';
+import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { Image, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
 
 const LoginPage = () => {
@@ -14,37 +16,37 @@ const LoginPage = () => {
         <Text style={styles.title}>Ingresar</Text>
           <View style={styles.inputContainer}>
             <View style={styles.inputRow}>
-              <Image source={imagePath.email} style={styles.icon} resizeMode='contain'/>
+              <Icon name="email-outline" size={moderateScale(22)} color={COLOR.icon} />
               <TextInput
                 style={styles.input}
                 placeholder="Correo electrónico"
-                placeholderTextColor="#A2A2A7"
+                placeholderTextColor={COLOR.icon}
                 keyboardType="email-address"
                 autoCapitalize="none"
               />
             </View>
           
             <View style={styles.inputRow}>
-              <Image source={imagePath.lock} style={styles.icon} resizeMode='contain'/>
+              <Icon name="lock-outline" size={moderateScale(22)} color={COLOR.icon} />
               <TextInput
                 style={styles.input}
                 placeholder="Contraseña"
-                placeholderTextColor="#A2A2A7"
+                placeholderTextColor={COLOR.icon}
                 secureTextEntry={!showPassword}
               />
               <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
-                <Image
-                  source={showPassword ? imagePath.eyeOff : imagePath.eye}
-                  style={styles.icon}
-                  resizeMode='contain'
-                />
+                <Icon
+                name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                size={moderateScale(22)}
+                color={COLOR.icon}
+              />
               </TouchableOpacity>
             </View>
             <ButtonComponent title="Ingresar"/>
           </View>
           <View style={styles.registerRow}>
             <Text style={styles.registerText}>Soy nuevo usuario. </Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => router.replace('/(auth)/register_page')}>
               <Text style={styles.registerLink}>Registrarme</Text>
             </TouchableOpacity>
           </View>
@@ -54,10 +56,10 @@ const LoginPage = () => {
         <Text style={styles.socialText}>O puedes ingresar con:</Text>
         <View style={styles.socialIcons}>
           <TouchableOpacity>
-            <Image source={imagePath.google} style={styles.socialIcon} resizeMode='contain'/>
+            <Icon name="google" size={moderateScale(54)} color={COLOR.icon} />
           </TouchableOpacity>
           <TouchableOpacity>
-            <Image source={imagePath.github} style={styles.socialIcon} resizeMode='contain'/>
+            <Icon name="github" size={moderateScale(54)} color={COLOR.icon} />
           </TouchableOpacity>
         </View>
       </View>
@@ -68,7 +70,7 @@ const LoginPage = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#161622',
+    backgroundColor: COLOR.background,
     paddingHorizontal: moderateScale(24),
     justifyContent: 'space-between',
   },
@@ -78,9 +80,10 @@ const styles = StyleSheet.create({
     paddingTop: verticalScale(32),
   },
   title: {
-    color: '#fff',
+    color: COLOR.textPrimary,
     fontSize: moderateScale(32),
-    marginBottom: verticalScale(32),
+    fontWeight: 'bold',
+    marginBottom: verticalScale(24),
   },
   inputContainer: {
     alignItems: 'center',
@@ -90,11 +93,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
-    backgroundColor: '#1E1E2D',
+    backgroundColor: COLOR.surface,
     borderRadius: moderateScale(8),
     paddingHorizontal: moderateScale(12),
     borderWidth: 1,
-    borderColor: '#23233A',
+    borderColor: COLOR.border,
   },
   icon: {
     width: moderateScale(22),
@@ -103,7 +106,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    color: '#fff',
+    color: COLOR.textPrimary,
     fontSize: moderateScale(16),
     paddingVertical: verticalScale(12),
   },
@@ -113,11 +116,11 @@ const styles = StyleSheet.create({
     marginTop: verticalScale(18),
   },
   registerText: {
-    color: '#A1A1A9',
+    color: COLOR.textSecondary,
     fontSize: moderateScale(15),
   },
   registerLink: {
-    color: '#2563EB',
+    color: COLOR.primary,
     fontSize: moderateScale(15),
     fontWeight: 'bold',
   },
@@ -126,7 +129,7 @@ const styles = StyleSheet.create({
     marginBottom: verticalScale(32),
   },
   socialText: {
-    color: '#A1A1A9',
+    color: COLOR.textSecondary,
     fontSize: moderateScale(15),
     marginBottom: verticalScale(18),
   },

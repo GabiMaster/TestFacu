@@ -19,8 +19,8 @@ const Auth = () => {
 
     useEffect(() => {
         setTimeout(loadingTimeout, 2000); // Simulate loading for 2 seconds
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+     
+    }, );
 
     return (
         <SafeAreaView style={styles.container}>
