@@ -1,5 +1,4 @@
 import { useAuth } from '@/src/hooks/useAuth';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Redirect, SplashScreen } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 
@@ -10,9 +9,9 @@ const Index = () => {
     const [loading, setLoading] = useState(true)
     console.log('User:', user);
 
-    useEffect(() => {
+    /* useEffect(() => {
         AsyncStorage.removeItem('user');
-    }, []);
+    }, []); */
 
     useEffect(() => {
         const prepare = async () => {

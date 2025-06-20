@@ -6,4 +6,6 @@ export default {
   eyeOff: require('@/src/assets/images/eye-off.png'),
   google: require('@/src/assets/images/google.png'),
   github: require('@/src/assets/images/github.png'),
+  python: require('@/src/assets/images/python.png'),
+  java: require('@/src/assets/images/java.png'),
 }

@@ -3,7 +3,7 @@ import { COLOR } from '@/src/constants/colors';
 import { Icon } from '@/src/constants/icons';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
-import { SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
 
 const LoginPage = () => {
@@ -56,10 +56,17 @@ const LoginPage = () => {
         <Text style={styles.socialText}>O puedes ingresar con:</Text>
         <View style={styles.socialIcons}>
           <TouchableOpacity>
-            <Icon name="google" size={moderateScale(54)} color={COLOR.icon} />
+            <Image
+              source={require('@/src/assets/images/google.png')}
+              style={styles.socialIcon}
+            />
           </TouchableOpacity>
           <TouchableOpacity>
-            <Icon name="github" size={moderateScale(54)} color={COLOR.icon} />
+            <Image
+              source={require('@/src/assets/images/github.png')}
+              style={styles.socialIcon}
+              tintColor={'#ffffff'}
+            />
           </TouchableOpacity>
         </View>
       </View>

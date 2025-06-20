@@ -3,7 +3,7 @@ export const COLOR = {
   background: '#161622',
 
   // Colores primarios (botones, enlaces)
-  primary: '#2563EB',
+  primary: '#0066FF',
   primaryLight: '#3B82F6',
   primaryDark: '#1E40AF',
 
@@ -12,6 +12,8 @@ export const COLOR = {
 
   // Superficies (tarjetas, inputs, etc)
   surface: '#1E1E2D',
+  surfaceLight: '#27273A',
+  surfaceDark: '#0F0F1A',
 
   // Bordes y líneas
   border: '#23233A',

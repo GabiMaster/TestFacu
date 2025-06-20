@@ -22,12 +22,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Load user from AsyncStorage on initial render (searching for existing user session)
     useEffect(() => {
         const getUser = async () => {
-            /* const hardCodedUser = {
+            const hardCodedUser = {
                 username: 'testuser',
                 email: 'testuser@gmail.com',
             };
             await AsyncStorage.setItem('user', JSON.stringify(hardCodedUser)); // For testing purposes
-            setUser(hardCodedUser); */
+            setUser(hardCodedUser);
             const storedUser = await AsyncStorage.getItem('user');
             if (storedUser) setUser(JSON.parse(storedUser));
         };
