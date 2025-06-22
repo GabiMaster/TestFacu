@@ -3,7 +3,7 @@ export const COLOR = {
   background: '#161622',
 
   // Colores primarios (botones, enlaces)
-  primary: '#0066FF',
+  primary: '#3794FF',
   primaryLight: '#3B82F6',
   primaryDark: '#1E40AF',
 

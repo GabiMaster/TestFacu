@@ -1,5 +1,6 @@
 import { COLOR } from '@/src/constants/colors';
 import { Icon } from '@/src/constants/icons';
+import { router } from 'expo-router';
 import React from 'react';
 import { Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
@@ -30,9 +31,12 @@ const Home = () => {
         {/* Inicio */}
         <Text style={styles.sectionTitle}>Inicio</Text>
         <View style={styles.quickActions}>
-          <TouchableOpacity style={styles.quickAction}>
+          <TouchableOpacity
+            style={styles.quickAction}
+            onPress={() => router.push({ pathname: '/(main)/new_project', params: { from: 'index' } })}
+          >
             <Icon name="addfile" type="ant" size={moderateScale(32)} color={COLOR.primary} />
-            <Text style={styles.quickActionText}>Nuevo Archivo...</Text>
+            <Text style={styles.quickActionText}>Nuevo Proyecto...</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.quickAction}>
             <Icon name="file-open" type='materialIcons' size={moderateScale(32)} color={COLOR.primary} />

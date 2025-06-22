@@ -8,4 +8,7 @@ export default {
   github: require('@/src/assets/images/github.png'),
   python: require('@/src/assets/images/python.png'),
   java: require('@/src/assets/images/java.png'),
+  javascript: require('@/src/assets/images/javascript.png'),
+  html: require('@/src/assets/images/html5.png'),
+  mysql: require('@/src/assets/images/mysql.png'),
 }
