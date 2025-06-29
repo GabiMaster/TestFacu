@@ -7,12 +7,14 @@ type AuthContextType = {
     user: any;
     signIn: (username: string) => Promise<void>;
     signOut: () => Promise<void>;
+    updateUser: (data: Partial<any>) => Promise<void>;
 };
 
 export const AuthContext = createContext<AuthContextType>({
     user: null,
     signIn: async () => {},
     signOut: async () => {},
+    updateUser: async () => {},
 });
 
 // Provider component to wrap the application and provide auth context
@@ -47,8 +49,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         await AsyncStorage.removeItem('user');
     };
 
+    // Function to update user data
+    const updateUser = async (data: Partial<any>) => {
+        const updatedUser = { ...user, ...data };
+        setUser(updatedUser);
+        await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+    };
+
     return (
-        <AuthContext.Provider value={{ user, signIn, signOut }}>
+        <AuthContext.Provider value={{ user, signIn, signOut, updateUser }}>
             {children}
         </AuthContext.Provider>
     );
