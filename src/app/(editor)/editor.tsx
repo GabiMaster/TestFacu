@@ -99,13 +99,6 @@ const Editor = () => {
     }
   };
 
-  // Función para actualizar la selección
-  const handleSelectionChange = (event: any) => {
-    const { start, end } = event.nativeEvent.selection;
-    setSelection({ start, end });
-    setCursorPosition(start);
-  };
-
   // Función para actualizar coincidencias de búsqueda
   const updateSearchMatches = (text: string, search: string) => {
     if (!search.trim()) {
@@ -245,111 +238,35 @@ const Editor = () => {
     }
   };
 
-  // Función auxiliar para actualizar la posición del cursor
-  const updateCursorPosition = (position: number) => {
-    setCursorPosition(position);
-    setSelection({ start: position, end: position });
-    
-    // Forzar la actualización de la selección
-    if (textInputRef.current) {
-      textInputRef.current.focus();
-      setTimeout(() => {
-        textInputRef.current?.setNativeProps({
-          selection: { start: position, end: position }
-        });
-      }, 50); // Pequeño retraso para asegurar que el componente esté listo
-    }
-  };
-
   // Función para navegar hacia la izquierda (carácter anterior)
   const handleNavigateLeft = () => {
     const newPosition = Math.max(0, cursorPosition - 1);
-    updateCursorPosition(newPosition);
+    setSelection({ start: newPosition, end: newPosition });
+    setCursorPosition(newPosition);
+    
+    textInputRef.current?.focus();
+    requestAnimationFrame(() => {
+      textInputRef.current?.setNativeProps({
+        selection: { start: newPosition, end: newPosition }
+      });
+    });
   };
 
   // Función para navegar hacia la derecha (carácter siguiente)
   const handleNavigateRight = () => {
     const newPosition = Math.min(code.length, cursorPosition + 1);
-    updateCursorPosition(newPosition);
+    setSelection({ start: newPosition, end: newPosition });
+    setCursorPosition(newPosition);
+    
+    textInputRef.current?.focus();
+    requestAnimationFrame(() => {
+      textInputRef.current?.setNativeProps({
+        selection: { start: newPosition, end: newPosition }
+      });
+    });
   };
 
-  // Función auxiliar para obtener línea y columna actual
-  const getCurrentLineAndColumn = (position: number) => {
-    const lines = code.split('\n');
-    let currentPos = 0;
-
-    for (let i = 0; i < lines.length; i++) {
-      const lineLength = lines[i].length;
-      const lineEnd = currentPos + lineLength;
-      
-      // Si la posición está dentro de esta línea
-      if (position >= currentPos && position <= lineEnd) {
-        return {
-          lineIndex: i,
-          column: position - currentPos,
-          lineStart: currentPos,
-        };
-      }
-      
-      // Mover al inicio de la siguiente línea (+1 por el \n)
-      currentPos = lineEnd + 1;
-    }
-
-    // Si llegamos aquí, la posición está al final del código
-    return {
-      lineIndex: lines.length - 1,
-      column: lines[lines.length - 1].length,
-      lineStart: currentPos - lines[lines.length - 1].length - 1,
-    };
-  };
-
-  // Función para navegar líneas hacia arriba
-  const handleNavigateUp = () => {
-    const lines = code.split('\n');
-    const { lineIndex, column } = getCurrentLineAndColumn(cursorPosition);
-
-    // Solo moverse si no estamos en la primera línea
-    if (lineIndex > 0) {
-      const prevLine = lines[lineIndex - 1];
-      
-      // Calcular la posición del inicio de la línea anterior
-      let prevLineStart = 0;
-      for (let i = 0; i < lineIndex - 1; i++) {
-        prevLineStart += lines[i].length + 1; // +1 por el \n
-      }
-      
-      // Mantener la columna si es posible, sino ir al final de la línea anterior
-      const newColumn = Math.min(column, prevLine.length);
-      const newPosition = prevLineStart + newColumn;
-      
-      updateCursorPosition(newPosition);
-    }
-    setShowMoreMenu(false);
-  };
-
-  // Función para navegar líneas hacia abajo
-  const handleNavigateDown = () => {
-    const lines = code.split('\n');
-    const { lineIndex, column } = getCurrentLineAndColumn(cursorPosition);
-
-    // Solo moverse si no estamos en la última línea
-    if (lineIndex < lines.length - 1) {
-      const nextLine = lines[lineIndex + 1];
-      
-      // Calcular la posición del inicio de la línea siguiente
-      let nextLineStart = 0;
-      for (let i = 0; i <= lineIndex; i++) {
-        nextLineStart += lines[i].length + 1; // +1 por el \n
-      }
-      
-      // Mantener la columna si es posible, sino ir al final de la línea siguiente
-      const newColumn = Math.min(column, nextLine.length);
-      const newPosition = nextLineStart + newColumn;
-      
-      updateCursorPosition(newPosition);
-    }
-    setShowMoreMenu(false);
-  };
+  
 
   // Función para formatear código
   const handleFormatCode = () => {
@@ -540,9 +457,10 @@ const Editor = () => {
               style={styles.codeInput}
               value={code}
               onChangeText={handleCodeChange}
-              selection={{ start: cursorPosition, end: cursorPosition }}
+              selection={selection}
               onSelectionChange={({ nativeEvent: { selection } }) => {
-                updateCursorPosition(selection.start);
+                setCursorPosition(selection.start);
+                setSelection({ start: selection.start, end: selection.end });
               }}
               multiline
               autoCapitalize="none"
@@ -579,16 +497,6 @@ const Editor = () => {
               <TouchableOpacity style={styles.moreMenuItem} onPress={handleFormatCode}>
                 <Icon name="code-tags" size={moderateScale(20)} color={COLOR.icon} />
                 <Text style={styles.moreMenuText}>Formatear</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity style={styles.moreMenuItem} onPress={handleNavigateUp}>
-                <Icon name="chevron-up" size={moderateScale(20)} color={COLOR.icon} />
-                <Text style={styles.moreMenuText}>Arriba</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity style={styles.moreMenuItem} onPress={handleNavigateDown}>
-                <Icon name="chevron-down" size={moderateScale(20)} color={COLOR.icon} />
-                <Text style={styles.moreMenuText}>Abajo</Text>
               </TouchableOpacity>
               
               <TouchableOpacity style={styles.moreMenuItem} onPress={handleDuplicateLine}>
