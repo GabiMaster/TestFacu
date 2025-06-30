@@ -44,17 +44,18 @@ const Editor = () => {
 
   // Inicialización
   useEffect(() => {
-    if (!isInitialized.current && language && CODE_TEMPLATES[language]) {
-      const template = CODE_TEMPLATES[language];
-      setCode(template);
-      setFileName(`main${getFileExtension(language)}`);
-      isInitialized.current = true;
-    } else if (!isInitialized.current && !language) {
-      setCode('');
-      setFileName('untitled.txt');
+    if (!isInitialized.current) {
+      if (language && CODE_TEMPLATES[language]) {
+        const template = CODE_TEMPLATES[language];
+        setCode(template);
+        setFileName(`main${getFileExtension(language)}`);
+      } else {
+        setCode('');
+        setFileName('untitled.txt');
+      }
       isInitialized.current = true;
     }
-  }, [language]); // Removemos codeHistory de las dependencias
+  }, [language]); // Solo language como dependencia
 
   // Handlers
   const handleCodeChange = (newCode: string) => {
@@ -109,14 +110,45 @@ const Editor = () => {
   }, [cursorPosition, code.length]);
 
   const handleFormatCode = useCallback(() => {
-    // Implementación básica de formateo
-    const formatted = code
+    // Implementación mejorada de formateo
+    let formatted = code;
+    
+    // Formateo básico universal
+    formatted = formatted
       .split('\n')
-      .map(line => line.trim())
+      .map(line => {
+        // Remover espacios al inicio y final
+        const trimmed = line.trim();
+        if (trimmed === '') return '';
+        
+        // Detectar nivel de indentación basado en llaves, paréntesis, etc.
+        let indentLevel = 0;
+        const prevLines = code.split('\n').slice(0, code.split('\n').indexOf(line));
+        
+        for (const prevLine of prevLines) {
+          const openBraces = (prevLine.match(/[{(\[]/g) || []).length;
+          const closeBraces = (prevLine.match(/[})\]]/g) || []).length;
+          indentLevel += openBraces - closeBraces;
+        }
+        
+        // Ajustar indentación de línea actual
+        const currentCloseBraces = (trimmed.match(/^[})\]]/g) || []).length;
+        const actualIndent = Math.max(0, indentLevel - currentCloseBraces);
+        
+        return '  '.repeat(actualIndent) + trimmed;
+      })
       .join('\n');
-    setCode(formatted);
-    codeHistory.addToHistory(formatted);
-  }, [code, codeHistory]);
+    
+    // Solo actualizar si hay cambios
+    if (formatted !== code) {
+      setCode(formatted);
+      codeHistory.addToHistory(formatted);
+      // Actualizar búsqueda si está activa
+      if (codeSearch.showSearch && codeSearch.searchText) {
+        codeSearch.updateSearchMatches(formatted, codeSearch.searchText);
+      }
+    }
+  }, [code, codeHistory, codeSearch]);
 
   const handleDuplicateLine = useCallback(() => {
     const lines = code.split('\n');
@@ -127,7 +159,11 @@ const Editor = () => {
     const newCode = lines.join('\n');
     setCode(newCode);
     codeHistory.addToHistory(newCode);
-  }, [code, cursorPosition, codeHistory]);
+    // Actualizar búsqueda si está activa
+    if (codeSearch.showSearch && codeSearch.searchText) {
+      codeSearch.updateSearchMatches(newCode, codeSearch.searchText);
+    }
+  }, [code, cursorPosition, codeHistory, codeSearch]);
 
   const handleToggleComment = useCallback(() => {
     const lines = code.split('\n');
@@ -143,7 +179,11 @@ const Editor = () => {
     const newCode = lines.join('\n');
     setCode(newCode);
     codeHistory.addToHistory(newCode);
-  }, [code, cursorPosition, codeHistory]);
+    // Actualizar búsqueda si está activa
+    if (codeSearch.showSearch && codeSearch.searchText) {
+      codeSearch.updateSearchMatches(newCode, codeSearch.searchText);
+    }
+  }, [code, cursorPosition, codeHistory, codeSearch]);
 
   // Handler para navegar a las coincidencias de búsqueda (navegación automática sin foco)
   const handleNavigateToMatch = useCallback((selection: { start: number; end: number }) => {
@@ -235,11 +275,23 @@ const Editor = () => {
         selection={selection}
         onUndo={() => {
           const undoCode = codeHistory.undo();
-          if (undoCode) setCode(undoCode);
+          if (undoCode !== null) {
+            setCode(undoCode);
+            // Actualizar búsqueda si está activa
+            if (codeSearch.showSearch && codeSearch.searchText) {
+              codeSearch.updateSearchMatches(undoCode, codeSearch.searchText);
+            }
+          }
         }}
         onRedo={() => {
           const redoCode = codeHistory.redo();
-          if (redoCode) setCode(redoCode);
+          if (redoCode !== null) {
+            setCode(redoCode);
+            // Actualizar búsqueda si está activa
+            if (codeSearch.showSearch && codeSearch.searchText) {
+              codeSearch.updateSearchMatches(redoCode, codeSearch.searchText);
+            }
+          }
         }}
         onNavigateLeft={handleNavigateLeft}
         onNavigateRight={handleNavigateRight}

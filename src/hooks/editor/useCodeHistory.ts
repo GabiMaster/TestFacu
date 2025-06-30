@@ -5,13 +5,14 @@ export const useCodeHistory = (initialCode: string = '') => {
   const [historyIndex, setHistoryIndex] = useState(0);
 
   const addToHistory = useCallback((newCode: string) => {
-    setHistory(prevHistory => {
-      const newHistory = prevHistory.slice(0, historyIndex + 1);
-      newHistory.push(newCode);
-      setHistoryIndex(newHistory.length - 1);
-      return newHistory;
-    });
-  }, [historyIndex]);
+    // Evitar agregar el mismo código consecutivamente
+    if (history[historyIndex] === newCode) return;
+    
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(newCode);
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+  }, [history, historyIndex]);
 
   const undo = useCallback(() => {
     if (historyIndex > 0) {
