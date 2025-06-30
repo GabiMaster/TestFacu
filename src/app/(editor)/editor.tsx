@@ -8,6 +8,7 @@ import { ConsolePanel } from '@/src/components/organisms/editor/ConsolePanel';
 import { EditorFooter } from '@/src/components/organisms/editor/EditorFooter';
 import { EditorHeader } from '@/src/components/organisms/editor/EditorHeader';
 import { SearchBar, SearchBarRef } from '@/src/components/organisms/editor/SearchBar';
+import { Sidebar } from '@/src/components/organisms/sidebar/Sidebar';
 
 // Hooks
 import { useCodeHistory } from '@/src/hooks/editor/useCodeHistory';
@@ -15,11 +16,15 @@ import { useCodeSearch } from '@/src/hooks/editor/useCodeSearch';
 
 // Utils
 import { COLOR } from '@/src/constants/colors';
+import { useSidebarContext } from '@/src/utils/contexts/SidebarContext';
 import { CODE_TEMPLATES, getFileExtension } from '@/src/utils/editor/templates';
 
 const Editor = () => {
   const params = useLocalSearchParams<{ language?: string }>();
   const language = params.language;
+  
+  // Contexto del sidebar
+  const { openSidebar, selectedFile } = useSidebarContext();
   
   // Estados principales
   const [code, setCode] = useState('');
@@ -42,7 +47,7 @@ const Editor = () => {
   // Referencia para evitar bucles infinitos
   const isInitialized = useRef(false);
 
-  // Inicialización
+  // Inicialización con template según el lenguaje
   useEffect(() => {
     if (!isInitialized.current) {
       if (language && CODE_TEMPLATES[language]) {
@@ -51,14 +56,23 @@ const Editor = () => {
         setFileName(`main${getFileExtension(language)}`);
       } else {
         setCode('');
-        setFileName('untitled.txt');
+        setFileName('untitled.txt');  
       }
       isInitialized.current = true;
     }
-  }, [language]); // Solo language como dependencia
+  }, [language]);
 
-  // Handlers
-  const handleCodeChange = (newCode: string) => {
+  // Efecto para cargar archivo seleccionado del sidebar
+  useEffect(() => {
+    if (selectedFile && selectedFile.type === 'file') {
+      setFileName(selectedFile.name);
+      // Aquí podrías cargar el contenido del archivo
+      // setCode(contenidoDelArchivo);
+    }
+  }, [selectedFile]);
+
+  // Handlers principales
+  const handleCodeChange = useCallback((newCode: string) => {
     setCode(newCode);
     if (codeHistory.history[codeHistory.historyIndex] !== newCode) {
       codeHistory.addToHistory(newCode);
@@ -66,9 +80,9 @@ const Editor = () => {
     if (codeSearch.showSearch && codeSearch.searchText) {
       codeSearch.updateSearchMatches(newCode, codeSearch.searchText);
     }
-  };
+  }, [codeHistory, codeSearch]);
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     setIsSaving(true);
     try {
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -76,9 +90,9 @@ const Editor = () => {
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [fileName, code]);
 
-  const handleRun = async () => {
+  const handleRun = useCallback(async () => {
     if (!code.trim()) return;
     
     if (!showConsole) setShowConsole(true);
@@ -90,9 +104,9 @@ const Editor = () => {
     } finally {
       setIsRunning(false);
     }
-  };
+  }, [code, showConsole]);
 
-  // Handlers adicionales para navegación y edición
+  // Handlers de navegación
   const handleNavigateLeft = useCallback(() => {
     if (cursorPosition > 0) {
       const newPosition = cursorPosition - 1;
@@ -109,8 +123,8 @@ const Editor = () => {
     }
   }, [cursorPosition, code.length]);
 
+  // Handler de formateo de código
   const handleFormatCode = useCallback(() => {
-    // Implementación mejorada de formateo
     let formatted = code;
     
     // Formateo básico universal
@@ -150,6 +164,7 @@ const Editor = () => {
     }
   }, [code, codeHistory, codeSearch]);
 
+  // Handler para duplicar línea
   const handleDuplicateLine = useCallback(() => {
     const lines = code.split('\n');
     const currentLineIndex = code.substring(0, cursorPosition).split('\n').length - 1;
@@ -165,6 +180,7 @@ const Editor = () => {
     }
   }, [code, cursorPosition, codeHistory, codeSearch]);
 
+  // Handler para comentar/descomentar
   const handleToggleComment = useCallback(() => {
     const lines = code.split('\n');
     const currentLineIndex = code.substring(0, cursorPosition).split('\n').length - 1;
@@ -185,7 +201,7 @@ const Editor = () => {
     }
   }, [code, cursorPosition, codeHistory, codeSearch]);
 
-  // Handler para navegar a las coincidencias de búsqueda (navegación automática sin foco)
+  // Handlers de búsqueda
   const handleNavigateToMatch = useCallback((selection: { start: number; end: number }) => {
     setSelection(selection);
     setCursorPosition(selection.start);
@@ -200,7 +216,6 @@ const Editor = () => {
     }
   }, []);
 
-  // Handler para navegación manual (con foco)
   const handleNavigateToMatchWithFocus = useCallback((selection: { start: number; end: number }) => {
     setSelection(selection);
     setCursorPosition(selection.start);
@@ -209,98 +224,105 @@ const Editor = () => {
     }
   }, []);
 
+  // Handler del menú (abre el sidebar)
+  const handleMenuPress = useCallback(() => {
+    openSidebar();
+  }, [openSidebar]);
+
   return (
-    <SafeAreaView style={styles.container}>
-      <EditorHeader
-        fileName={fileName}
-        isSaving={isSaving}
-        isRunning={isRunning}
-        showConsole={showConsole}
-        onMenuPress={() => {}}
-        onSavePress={handleSave}
-        onSearchPress={codeSearch.toggleSearch}
-        onConsoleToggle={() => setShowConsole(!showConsole)}
-        onRunPress={handleRun}
-      />
-
-      {codeSearch.showSearch && (
-        <SearchBar
-          ref={searchBarRef}
-          searchText={codeSearch.searchText}
-          searchMatches={codeSearch.searchMatches}
-          currentMatchIndex={codeSearch.currentMatchIndex}
-          onSearchTextChange={codeSearch.setSearchText}
-          onSearchNext={codeSearch.searchNext}
-          onSearchPrevious={codeSearch.searchPrevious}
-          onUpdateMatches={codeSearch.updateSearchMatches}
-          onNavigateToMatch={handleNavigateToMatch}
-          onNavigateToMatchWithFocus={handleNavigateToMatchWithFocus}
-          code={code}
+    <Sidebar>
+      <SafeAreaView style={styles.container}>
+        <EditorHeader
+          fileName={fileName}
+          isSaving={isSaving}
+          isRunning={isRunning}
+          showConsole={showConsole}
+          onMenuPress={handleMenuPress}
+          onSavePress={handleSave}
+          onSearchPress={codeSearch.toggleSearch}
+          onConsoleToggle={() => setShowConsole(!showConsole)}
+          onRunPress={handleRun}
         />
-      )}
 
-      <KeyboardAvoidingView
-        style={styles.body}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-        <View style={styles.mainContent}>
-          <CodeEditor
-            ref={codeEditorRef}
+        {codeSearch.showSearch && (
+          <SearchBar
+            ref={searchBarRef}
+            searchText={codeSearch.searchText}
+            searchMatches={codeSearch.searchMatches}
+            currentMatchIndex={codeSearch.currentMatchIndex}
+            onSearchTextChange={codeSearch.setSearchText}
+            onSearchNext={codeSearch.searchNext}
+            onSearchPrevious={codeSearch.searchPrevious}
+            onUpdateMatches={codeSearch.updateSearchMatches}
+            onNavigateToMatch={handleNavigateToMatch}
+            onNavigateToMatchWithFocus={handleNavigateToMatchWithFocus}
             code={code}
-            selection={selection}
-            onCodeChange={handleCodeChange}
-            onSelectionChange={setSelection}
-            onCursorPositionChange={setCursorPosition}
-            showConsole={showConsole}
           />
+        )}
 
-          {showConsole && (
-            <ConsolePanel
-              language={language}
-              code={isRunning ? code : ''}
-              isExecuting={isRunning}
-              onToggle={() => setShowConsole(false)}
-              onClear={() => {}}
+        <KeyboardAvoidingView
+          style={styles.body}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <View style={styles.mainContent}>
+            <CodeEditor
+              ref={codeEditorRef}
+              code={code}
+              selection={selection}
+              onCodeChange={handleCodeChange}
+              onSelectionChange={setSelection}
+              onCursorPositionChange={setCursorPosition}
+              showConsole={showConsole}
             />
-          )}
-        </View>
-      </KeyboardAvoidingView>
 
-      <EditorFooter
-        canUndo={codeHistory.canUndo}
-        canRedo={codeHistory.canRedo}
-        showMoreMenu={showMoreMenu}
-        cursorPosition={cursorPosition}
-        code={code}
-        selection={selection}
-        onUndo={() => {
-          const undoCode = codeHistory.undo();
-          if (undoCode !== null) {
-            setCode(undoCode);
-            // Actualizar búsqueda si está activa
-            if (codeSearch.showSearch && codeSearch.searchText) {
-              codeSearch.updateSearchMatches(undoCode, codeSearch.searchText);
+            {showConsole && (
+              <ConsolePanel
+                language={language}
+                code={isRunning ? code : ''}
+                isExecuting={isRunning}
+                onToggle={() => setShowConsole(false)}
+                onClear={() => {}}
+              />
+            )}
+          </View>
+        </KeyboardAvoidingView>
+
+        <EditorFooter
+          canUndo={codeHistory.canUndo}
+          canRedo={codeHistory.canRedo}
+          showMoreMenu={showMoreMenu}
+          cursorPosition={cursorPosition}
+          code={code}
+          selection={selection}
+          onUndo={() => {
+            const undoCode = codeHistory.undo();
+            if (undoCode !== null) {
+              setCode(undoCode);
+              // Actualizar búsqueda si está activa
+              if (codeSearch.showSearch && codeSearch.searchText) {
+                codeSearch.updateSearchMatches(undoCode, codeSearch.searchText);
+              }
             }
-          }
-        }}
-        onRedo={() => {
-          const redoCode = codeHistory.redo();
-          if (redoCode !== null) {
-            setCode(redoCode);
-            // Actualizar búsqueda si está activa
-            if (codeSearch.showSearch && codeSearch.searchText) {
-              codeSearch.updateSearchMatches(redoCode, codeSearch.searchText);
+          }}
+          onRedo={() => {
+            const redoCode = codeHistory.redo();
+            if (redoCode !== null) {
+              setCode(redoCode);
+              // Actualizar búsqueda si está activa
+              if (codeSearch.showSearch && codeSearch.searchText) {
+                codeSearch.updateSearchMatches(redoCode, codeSearch.searchText);
+              }
             }
-          }
-        }}
-        onNavigateLeft={handleNavigateLeft}
-        onNavigateRight={handleNavigateRight}
-        onMoreMenuToggle={() => setShowMoreMenu(!showMoreMenu)}
-        onFormatCode={handleFormatCode}
-        onDuplicateLine={handleDuplicateLine}
-        onToggleComment={handleToggleComment}
-      />
-    </SafeAreaView>
+          }}
+          onNavigateLeft={handleNavigateLeft}
+          onNavigateRight={handleNavigateRight}
+          onMoreMenuToggle={() => setShowMoreMenu(!showMoreMenu)}
+          onFormatCode={handleFormatCode}
+          onDuplicateLine={handleDuplicateLine}
+          onToggleComment={handleToggleComment}
+        />
+      </SafeAreaView>
+    </Sidebar>
   );
 };
 

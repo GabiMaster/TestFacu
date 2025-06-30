@@ -1,7 +1,7 @@
 import { COLOR } from '@/src/constants/colors';
 import { Icon } from '@/src/constants/icons';
 import React from 'react';
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
 
 interface EditorHeaderProps {
@@ -27,23 +27,11 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
   onConsoleToggle,
   onRunPress,
 }) => {
-  const handleMenuOptions = () => {
-    Alert.alert(
-      'Opciones del Editor',
-      'Selecciona una opción:',
-      [
-        { text: 'Nuevo archivo', onPress: () => console.log('Nuevo archivo') },
-        { text: 'Configuración', onPress: () => console.log('Configuración') },
-        { text: 'Ayuda', onPress: () => console.log('Ayuda') },
-        { text: 'Cancelar', style: 'cancel' }
-      ]
-    );
-  };
 
   return (
     <View style={styles.header}>
       <View style={styles.headerLeft}>
-        <TouchableOpacity style={styles.menuButton} onPress={handleMenuOptions}>
+        <TouchableOpacity style={styles.menuButton} onPress={onMenuPress}>
           <Icon name="menu" size={moderateScale(20)} color={COLOR.icon} />
         </TouchableOpacity>
         <Text style={styles.fileName}>{fileName}</Text>

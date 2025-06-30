@@ -1,13 +1,28 @@
+import { COLOR } from '@/src/constants/colors';
+import { SidebarProvider } from '@/src/utils/contexts/SidebarContext';
 import { Stack } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import React from 'react';
 
-const EditorLayout = () => {
+export default function EditorLayout() {
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="editor" />
-      {/* Puedes agregar más pantallas aquí si las necesitas */}
-    </Stack>
+    <SidebarProvider>
+      <StatusBar style="light" backgroundColor={COLOR.surface} />
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          gestureEnabled: false,
+          animation: 'slide_from_right',
+        }}
+      >
+        <Stack.Screen 
+          name="editor" 
+          options={{
+            title: 'Editor',
+            headerShown: false,
+          }}
+        />
+      </Stack>
+    </SidebarProvider>
   );
-};
-
-export default EditorLayout;
+}
