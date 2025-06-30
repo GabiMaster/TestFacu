@@ -11,8 +11,9 @@ const Profile = () => {
   const { user, signOut } = useAuth();
   const router = useRouter();
 
-  const handleLogoutPress = () => {
-    router.push('/(tabs)/logout');
+  const handleLogoutPress = async () => {
+    await signOut();
+    router.push('/(settings)/logout');
   };
 
   return (
@@ -27,7 +28,7 @@ const Profile = () => {
       </LinearGradient>
       <ScrollView contentContainerStyle={{ paddingBottom: verticalScale(32) }}>
         {/* Información Personal */}
-        <TouchableOpacity style={styles.sectionBox} onPress={() => router.push('/(tabs)/edit_personal_info')}>
+        <TouchableOpacity style={styles.sectionBox} onPress={() => router.push('/(settings)/edit_personal_info')}>
           <View style={styles.sectionRow}>
             <Icon name="account-outline" size={24} color={COLOR.icon} />
             <Text style={styles.sectionText}>Información Personal</Text>

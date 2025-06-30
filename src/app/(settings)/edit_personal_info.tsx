@@ -21,6 +21,7 @@ const EditPersonalInfo = () => {
       Alert.alert('Éxito', 'Datos actualizados correctamente');
       router.back();
     } catch (e) {
+      console.error('Error al guardar:', e);
       Alert.alert('Error', 'No se pudieron guardar los cambios');
     } finally {
       setLoading(false);
@@ -30,7 +31,7 @@ const EditPersonalInfo = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.replace('/(tabs)/profile')}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.replace('/(settings)/profile')}>
           <Icon name="arrow-left" size={22} color={COLOR.icon} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Editar Información</Text>

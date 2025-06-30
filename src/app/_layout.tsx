@@ -7,7 +7,14 @@ export default function Layout() {
   return (
     <AuthProvider>
       <LanguageProvider>
-        <Stack screenOptions={{ headerShown: false }} />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="index" />
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="(main)" />
+          <Stack.Screen name="(editor)" />
+          <Stack.Screen name="(settings)" />
+        </Stack>
       </LanguageProvider>
     </AuthProvider>
   );

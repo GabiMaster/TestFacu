@@ -22,16 +22,16 @@ const Settings = () => {
         {/* General Section */}
         <Text style={styles.sectionTitle}>General</Text>
         <View style={styles.sectionBox}>
-          <TouchableOpacity style={styles.itemRow} onPress={() => router.push('/(tabs)/language_selector')}>
+          <TouchableOpacity style={styles.itemRow} onPress={() => router.push('/(settings)/language_selector')}>
             <Icon name="translate" size={22} color={COLOR.icon} />
             <Text style={styles.itemText}>Idioma</Text>
             <Text style={styles.languageLabel}>{language.toUpperCase()}</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.itemRow} onPress={() => router.push('/(tabs)/profile')}>
+          <TouchableOpacity style={styles.itemRow} onPress={() => router.push('/(settings)/profile')}>
             <Icon name="account-outline" size={22} color={COLOR.icon} />
             <Text style={styles.itemText}>Mi Perfil</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.itemRow} onPress={() => router.push('/(tabs)/contactanos')}>
+          <TouchableOpacity style={styles.itemRow} onPress={() => router.push('/(settings)/contactanos')}>
             <Icon name="email-outline" size={22} color={COLOR.icon} />
             <Text style={styles.itemText}>Contáctanos</Text>
           </TouchableOpacity>
@@ -40,11 +40,11 @@ const Settings = () => {
         {/* Seguridad Section */}
         <Text style={styles.sectionTitle}>Seguridad</Text>
         <View style={styles.sectionBox}>
-          <TouchableOpacity style={styles.itemRow} onPress={() => router.push('/(tabs)/cambiar_contrasena')}>
+          <TouchableOpacity style={styles.itemRow} onPress={() => router.push('/(settings)/cambiar_contrasena')}>
             <Icon name="lock-reset" size={22} color={COLOR.icon} />
             <Text style={styles.itemText}>Cambiar contraseña</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.itemRow} onPress={() => router.push('/(tabs)/politicas_privacidad')}>
+          <TouchableOpacity style={styles.itemRow} onPress={() => router.push('/(settings)/politicas_privacidad')}>
             <Icon name="file-document-outline" size={22} color={COLOR.icon} />
             <Text style={styles.itemText}>Políticas de privacidad</Text>
           </TouchableOpacity>

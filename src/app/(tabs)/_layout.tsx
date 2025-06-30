@@ -53,14 +53,6 @@ const layout = () => {
                   tabBarIcon: ({ color, size}) => <Icon name="cog-outline" color={color} size={size} />
               }}
           />
-          <Tabs.Screen name="profile" options={{ href: null }} />
-          <Tabs.Screen name="edit_personal_info" options={{ href: null }} />
-          <Tabs.Screen name="logout" options={{ href: null }} />
-          <Tabs.Screen name="contactanos" options={{ href: null }} />
-          <Tabs.Screen name="cambiar_contrasena" options={{ href: null }} />
-          <Tabs.Screen name="language_selector" options={{ href: null }} />
-          <Tabs.Screen name="politicas_privacidad" options={{ href: null }} />
-
       </Tabs>
   );
 };
