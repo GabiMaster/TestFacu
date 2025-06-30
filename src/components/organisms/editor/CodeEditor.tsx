@@ -14,6 +14,7 @@ interface CodeEditorProps {
 
 export interface CodeEditorRef {
   focusAndSelect: (selection: { start: number; end: number }) => void;
+  selectWithoutFocus: (selection: { start: number; end: number }, returnFocusCallback?: () => void) => void;
 }
 
 export const CodeEditor = forwardRef<CodeEditorRef, CodeEditorProps>(({
@@ -38,6 +39,29 @@ export const CodeEditor = forwardRef<CodeEditorRef, CodeEditorProps>(({
             });
             onSelectionChange(newSelection);
             onCursorPositionChange(newSelection.start);
+          }
+        }, 50);
+      }
+    },
+    selectWithoutFocus: (newSelection: { start: number; end: number }, returnFocusCallback?: () => void) => {
+      if (textInputRef.current) {
+        // Enfocamos brevemente para mostrar la selección
+        textInputRef.current.focus();
+        
+        setTimeout(() => {
+          if (textInputRef.current) {
+            textInputRef.current.setNativeProps({
+              selection: newSelection,
+            });
+            onSelectionChange(newSelection);
+            onCursorPositionChange(newSelection.start);
+            
+            // Si hay un callback, lo ejecutamos después de un breve delay
+            if (returnFocusCallback) {
+              setTimeout(() => {
+                returnFocusCallback();
+              }, 100);
+            }
           }
         }, 50);
       }

@@ -1,6 +1,6 @@
 import { COLOR } from '@/src/constants/colors';
 import { Icon } from '@/src/constants/icons';
-import React from 'react';
+import React, { forwardRef, useImperativeHandle, useRef } from 'react';
 import { StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
 
@@ -12,17 +12,37 @@ interface SearchInputProps {
   autoFocus?: boolean;
 }
 
-export const SearchInput: React.FC<SearchInputProps> = ({
+export interface SearchInputRef {
+  focus: () => void;
+  blur: () => void;
+}
+
+export const SearchInput = forwardRef<SearchInputRef, SearchInputProps>(({
   value,
   onChangeText,
   placeholder,
   onClear,
   autoFocus = false,
-}) => {
+}, ref) => {
+  const textInputRef = useRef<TextInput>(null);
+
+  useImperativeHandle(ref, () => ({
+    focus: () => {
+      if (textInputRef.current) {
+        textInputRef.current.focus();
+      }
+    },
+    blur: () => {
+      if (textInputRef.current) {
+        textInputRef.current.blur();
+      }
+    },
+  }));
   return (
     <View style={styles.searchInputContainer}>
       <Icon name="magnify" size={moderateScale(18)} color={COLOR.icon} />
       <TextInput
+        ref={textInputRef}
         style={styles.searchInput}
         value={value}
         onChangeText={onChangeText}
@@ -37,7 +57,9 @@ export const SearchInput: React.FC<SearchInputProps> = ({
       )}
     </View>
   );
-};
+});
+
+SearchInput.displayName = 'SearchInput';
 
 const styles = StyleSheet.create({
   searchInputContainer: {

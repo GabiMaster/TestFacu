@@ -1,7 +1,7 @@
-import { SearchInput } from '@/src/components/molecules/SearchInput';
+import { SearchInput, SearchInputRef } from '@/src/components/molecules/SearchInput';
 import { COLOR } from '@/src/constants/colors';
 import { Icon } from '@/src/constants/icons';
-import React from 'react';
+import React, { forwardRef, useImperativeHandle, useRef } from 'react';
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
 
@@ -13,11 +13,16 @@ interface SearchBarProps {
   onSearchNext: () => { position: number; length: number; selection: { start: number; end: number } } | null;
   onSearchPrevious: () => { position: number; length: number; selection: { start: number; end: number } } | null;
   onUpdateMatches: (text: string, search: string) => { position: number; length: number; selection: { start: number; end: number } } | null;
-  onNavigateToMatch: (selection: { start: number; end: number }) => void;
+  onNavigateToMatch: (selection: { start: number; end: number }) => void; // Para navegación automática (sin foco)
+  onNavigateToMatchWithFocus: (selection: { start: number; end: number }) => void; // Para navegación manual (con foco)
   code: string;
 }
 
-export const SearchBar: React.FC<SearchBarProps> = ({
+export interface SearchBarRef {
+  focusSearchInput: () => void;
+}
+
+export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(({
   searchText,
   searchMatches,
   currentMatchIndex,
@@ -26,8 +31,18 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   onSearchPrevious,
   onUpdateMatches,
   onNavigateToMatch,
+  onNavigateToMatchWithFocus,
   code,
-}) => {
+}, ref) => {
+  const searchInputRef = useRef<SearchInputRef>(null);
+
+  useImperativeHandle(ref, () => ({
+    focusSearchInput: () => {
+      if (searchInputRef.current) {
+        searchInputRef.current.focus();
+      }
+    },
+  }));
   const handleSearchTextChange = (text: string) => {
     onSearchTextChange(text);
     const result = onUpdateMatches(code, text);
@@ -40,7 +55,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   const handleSearchNext = () => {
     const result = onSearchNext();
     if (result) {
-      onNavigateToMatch(result.selection);
+      onNavigateToMatchWithFocus(result.selection); // Navegación manual con foco
     } else {
       Alert.alert('Búsqueda', 'No se encontraron coincidencias');
     }
@@ -49,7 +64,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   const handleSearchPrevious = () => {
     const result = onSearchPrevious();
     if (result) {
-      onNavigateToMatch(result.selection);
+      onNavigateToMatchWithFocus(result.selection); // Navegación manual con foco
     } else {
       Alert.alert('Búsqueda', 'No se encontraron coincidencias');
     }
@@ -62,10 +77,12 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   return (
     <View style={styles.searchContainer}>
       <SearchInput
+        ref={searchInputRef}
         value={searchText}
         onChangeText={handleSearchTextChange}
         placeholder="Buscar en el código..."
         onClear={handleClearSearch}
+        autoFocus={true}
       />
       
       <View style={styles.searchActions}>
@@ -98,7 +115,9 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       </View>
     </View>
   );
-};
+});
+
+SearchBar.displayName = 'SearchBar';
 
 const styles = StyleSheet.create({
   searchContainer: {

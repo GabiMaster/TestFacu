@@ -7,7 +7,7 @@ import { CodeEditor, CodeEditorRef } from '@/src/components/organisms/editor/Cod
 import { ConsolePanel } from '@/src/components/organisms/editor/ConsolePanel';
 import { EditorFooter } from '@/src/components/organisms/editor/EditorFooter';
 import { EditorHeader } from '@/src/components/organisms/editor/EditorHeader';
-import { SearchBar } from '@/src/components/organisms/editor/SearchBar';
+import { SearchBar, SearchBarRef } from '@/src/components/organisms/editor/SearchBar';
 
 // Hooks
 import { useCodeHistory } from '@/src/hooks/editor/useCodeHistory';
@@ -37,6 +37,7 @@ const Editor = () => {
   
   // Referencias
   const codeEditorRef = useRef<CodeEditorRef>(null);
+  const searchBarRef = useRef<SearchBarRef>(null);
   
   // Referencia para evitar bucles infinitos
   const isInitialized = useRef(false);
@@ -144,8 +145,23 @@ const Editor = () => {
     codeHistory.addToHistory(newCode);
   }, [code, cursorPosition, codeHistory]);
 
-  // Handler para navegar a las coincidencias de búsqueda
+  // Handler para navegar a las coincidencias de búsqueda (navegación automática sin foco)
   const handleNavigateToMatch = useCallback((selection: { start: number; end: number }) => {
+    setSelection(selection);
+    setCursorPosition(selection.start);
+    if (codeEditorRef.current) {
+      // Función de callback para devolver el foco al SearchInput
+      const returnFocusToSearch = () => {
+        if (searchBarRef.current) {
+          searchBarRef.current.focusSearchInput();
+        }
+      };
+      codeEditorRef.current.selectWithoutFocus(selection, returnFocusToSearch);
+    }
+  }, []);
+
+  // Handler para navegación manual (con foco)
+  const handleNavigateToMatchWithFocus = useCallback((selection: { start: number; end: number }) => {
     setSelection(selection);
     setCursorPosition(selection.start);
     if (codeEditorRef.current) {
@@ -169,6 +185,7 @@ const Editor = () => {
 
       {codeSearch.showSearch && (
         <SearchBar
+          ref={searchBarRef}
           searchText={codeSearch.searchText}
           searchMatches={codeSearch.searchMatches}
           currentMatchIndex={codeSearch.currentMatchIndex}
@@ -177,6 +194,7 @@ const Editor = () => {
           onSearchPrevious={codeSearch.searchPrevious}
           onUpdateMatches={codeSearch.updateSearchMatches}
           onNavigateToMatch={handleNavigateToMatch}
+          onNavigateToMatchWithFocus={handleNavigateToMatchWithFocus}
           code={code}
         />
       )}
