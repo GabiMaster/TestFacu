@@ -1,8 +1,8 @@
 import { COLOR } from '@/src/constants/colors';
 import { Icon } from '@/src/constants/icons';
 import { useLocalSearchParams } from 'expo-router';
-import React, { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Alert, Animated, KeyboardAvoidingView, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
 
 const CODE_TEMPLATES: Record<string, string> = {
@@ -32,10 +32,26 @@ const Editor = () => {
   const [fileName, setFileName] = useState('game.js');
   const [showSearch, setShowSearch] = useState(false);
   const [searchText, setSearchText] = useState('');
+  const [history, setHistory] = useState<string[]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const [cursorPosition, setCursorPosition] = useState(0);
+  const [selection, setSelection] = useState({ start: 0, end: 0 });
+  const [isRunning, setIsRunning] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [searchMatches, setSearchMatches] = useState<number[]>([]);
+  const [currentMatchIndex, setCurrentMatchIndex] = useState(-1);
+  
+  const textInputRef = useRef<TextInput>(null);
+  const slideAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (language && CODE_TEMPLATES[language]) {
-      setCode(CODE_TEMPLATES[language]);
+      const template = CODE_TEMPLATES[language];
+      setCode(template);
+      setHistory([template]);
+      setHistoryIndex(0);
+      
       // Generar nombre de archivo basado en el lenguaje
       const extensions: Record<string, string> = {
         Python: '.py',
@@ -47,33 +63,319 @@ const Editor = () => {
       setFileName(`main${extensions[language] || '.txt'}`);
     } else {
       setCode('');
+      setHistory(['']);
+      setHistoryIndex(0);
       setFileName('untitled.txt');
     }
   }, [language]);
 
-  const handleRunCode = () => {
-    // Función para ejecutar el código
-    console.log('Ejecutando código:', code);
+  // Animación del menú "Más"
+  useEffect(() => {
+    Animated.timing(slideAnim, {
+      toValue: showMoreMenu ? 1 : 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  }, [showMoreMenu, slideAnim]);
+
+  // Función para agregar al historial
+  const addToHistory = (newCode: string) => {
+    const newHistory = history.slice(0, historyIndex + 1);
+    newHistory.push(newCode);
+    setHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
   };
 
+  // Función para manejar cambios en el código
+  const handleCodeChange = (newCode: string) => {
+    setCode(newCode);
+    // Agregar al historial solo si es diferente del último
+    if (history[historyIndex] !== newCode) {
+      addToHistory(newCode);
+    }
+    // Actualizar búsqueda si está activa
+    if (showSearch && searchText) {
+      updateSearchMatches(newCode, searchText);
+    }
+  };
+
+  // Función para actualizar la selección
+  const handleSelectionChange = (event: any) => {
+    const { start, end } = event.nativeEvent.selection;
+    setSelection({ start, end });
+    setCursorPosition(start);
+  };
+
+  // Función para actualizar coincidencias de búsqueda
+  const updateSearchMatches = (text: string, search: string) => {
+    if (!search.trim()) {
+      setSearchMatches([]);
+      setCurrentMatchIndex(-1);
+      return;
+    }
+
+    const matches: number[] = [];
+    const searchLower = search.toLowerCase();
+    const textLower = text.toLowerCase();
+    let index = 0;
+
+    while (index < textLower.length) {
+      const foundIndex = textLower.indexOf(searchLower, index);
+      if (foundIndex === -1) break;
+      matches.push(foundIndex);
+      index = foundIndex + 1;
+    }
+
+    setSearchMatches(matches);
+    setCurrentMatchIndex(matches.length > 0 ? 0 : -1);
+  };
+
+  // Función para ejecutar el código
+  const handleRunCode = async () => {
+    if (!code.trim()) {
+      Alert.alert('Error', 'No hay código para ejecutar');
+      return;
+    }
+
+    setIsRunning(true);
+    try {
+      // Simular ejecución del código
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      Alert.alert('Éxito', `Código ${language || 'genérico'} ejecutado correctamente`);
+      console.log('Ejecutando código:', code);
+    } catch (error) {
+      Alert.alert('Error', 'Error al ejecutar el código');
+      console.error('Error ejecutando código:', error);
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
+  // Función para guardar el código
+  const handleSaveCode = async () => {
+    setIsSaving(true);
+    try {
+      // Simular guardado del código
+      await new Promise(resolve => setTimeout(resolve, 500));
+      Alert.alert('Éxito', `Archivo ${fileName} guardado correctamente`);
+      console.log('Guardando código:', { fileName, code });
+    } catch (error) {
+      Alert.alert('Error', 'Error al guardar el archivo');
+      console.error('Error guardando código:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Función para buscar texto
   const handleSearch = () => {
     setShowSearch(!showSearch);
     if (!showSearch) {
       setSearchText('');
+      setSearchMatches([]);
+      setCurrentMatchIndex(-1);
     }
   };
 
-  const handleMenuOptions = () => {
-    // Función para mostrar opciones del menú
-    console.log('Mostrando opciones del menú');
+  // Función para manejar cambios en el texto de búsqueda
+  const handleSearchTextChange = (text: string) => {
+    setSearchText(text);
+    updateSearchMatches(code, text);
   };
 
-  // En la función handleFormatCode:
+  // Función para buscar siguiente
+  const handleSearchNext = () => {
+    if (searchMatches.length === 0) {
+      Alert.alert('Búsqueda', 'No se encontraron coincidencias');
+      return;
+    }
+
+    const nextIndex = (currentMatchIndex + 1) % searchMatches.length;
+    setCurrentMatchIndex(nextIndex);
+    const position = searchMatches[nextIndex];
+    setCursorPosition(position);
+    setSelection({ start: position, end: position + searchText.length });
+    
+    // Enfocar el TextInput y actualizar la selección
+    textInputRef.current?.focus();
+    setTimeout(() => {
+      textInputRef.current?.setNativeProps({
+        selection: { start: position, end: position + searchText.length }
+      });
+    }, 100);
+  };
+
+  // Función para buscar anterior
+  const handleSearchPrevious = () => {
+    if (searchMatches.length === 0) {
+      Alert.alert('Búsqueda', 'No se encontraron coincidencias');
+      return;
+    }
+
+    const prevIndex = currentMatchIndex - 1 < 0 ? searchMatches.length - 1 : currentMatchIndex - 1;
+    setCurrentMatchIndex(prevIndex);
+    const position = searchMatches[prevIndex];
+    setCursorPosition(position);
+    setSelection({ start: position, end: position + searchText.length });
+    
+    // Enfocar el TextInput y actualizar la selección
+    textInputRef.current?.focus();
+    setTimeout(() => {
+      textInputRef.current?.setNativeProps({
+        selection: { start: position, end: position + searchText.length }
+      });
+    }, 100);
+  };
+
+  // Función para deshacer
+  const handleUndo = () => {
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1;
+      setHistoryIndex(newIndex);
+      setCode(history[newIndex]);
+    }
+  };
+
+  // Función para rehacer
+  const handleRedo = () => {
+    if (historyIndex < history.length - 1) {
+      const newIndex = historyIndex + 1;
+      setHistoryIndex(newIndex);
+      setCode(history[newIndex]);
+    }
+  };
+
+  // Función auxiliar para actualizar la posición del cursor
+  const updateCursorPosition = (position: number) => {
+    setCursorPosition(position);
+    setSelection({ start: position, end: position });
+    
+    // Forzar la actualización de la selección
+    if (textInputRef.current) {
+      textInputRef.current.focus();
+      setTimeout(() => {
+        textInputRef.current?.setNativeProps({
+          selection: { start: position, end: position }
+        });
+      }, 50); // Pequeño retraso para asegurar que el componente esté listo
+    }
+  };
+
+  // Función para navegar hacia la izquierda (carácter anterior)
+  const handleNavigateLeft = () => {
+    const newPosition = Math.max(0, cursorPosition - 1);
+    updateCursorPosition(newPosition);
+  };
+
+  // Función para navegar hacia la derecha (carácter siguiente)
+  const handleNavigateRight = () => {
+    const newPosition = Math.min(code.length, cursorPosition + 1);
+    updateCursorPosition(newPosition);
+  };
+
+  // Función auxiliar para obtener línea y columna actual
+  const getCurrentLineAndColumn = (position: number) => {
+    const lines = code.split('\n');
+    let currentPos = 0;
+
+    for (let i = 0; i < lines.length; i++) {
+      const lineLength = lines[i].length + 1; // +1 por el salto de línea
+      if (position < currentPos + lineLength) {
+        return {
+          lineIndex: i,
+          column: position - currentPos,
+          lineStart: currentPos,
+        };
+      }
+      currentPos += lineLength;
+    }
+
+    // Si no encontró la línea, devolver última
+    return {
+      lineIndex: lines.length - 1,
+      column: lines[lines.length - 1].length,
+      lineStart: code.length - lines[lines.length - 1].length,
+    };
+  };
+
+  // Función para navegar líneas hacia arriba
+  const handleNavigateUp = () => {
+    const { lineIndex, column } = getCurrentLineAndColumn(cursorPosition);
+    if (lineIndex > 0) {
+      const prevLine = code.split('\n')[lineIndex - 1];
+      const newPosition = code
+        .split('\n')
+        .slice(0, lineIndex - 1)
+        .reduce((acc, line) => acc + line.length + 1, 0) + Math.min(column, prevLine.length);
+
+      updateCursorPosition(newPosition);
+    }
+  };
+
+  const handleNavigateDown = () => {
+    const { lineIndex, column } = getCurrentLineAndColumn(cursorPosition);
+    const lines = code.split('\n');
+    if (lineIndex < lines.length - 1) {
+      const newPosition = code
+        .split('\n')
+        .slice(0, lineIndex + 1)
+        .reduce((acc, line) => acc + line.length + 1, 0) + Math.min(column, lines[lineIndex + 1].length);
+
+      updateCursorPosition(newPosition);
+    }
+  };
+
+  // Función para formatear código
   const handleFormatCode = () => {
     if (!code.trim()) return;
     
     const formattedCode = basicFormat(code);
     setCode(formattedCode);
+    addToHistory(formattedCode);
+    setShowMoreMenu(false);
+  };
+
+  // Función para duplicar línea
+  const handleDuplicateLine = () => {
+    const lines = code.split('\n');
+    const currentLineIndex = code.slice(0, selection.start).split('\n').length - 1;
+    const currentLine = lines[currentLineIndex];
+    
+    lines.splice(currentLineIndex + 1, 0, currentLine);
+    const newCode = lines.join('\n');
+    setCode(newCode);
+    addToHistory(newCode);
+    setShowMoreMenu(false);
+  };
+
+  // Función para comentar/descomentar línea
+  const handleToggleComment = () => {
+    const lines = code.split('\n');
+    const currentLineIndex = code.slice(0, selection.start).split('\n').length - 1;
+    const currentLine = lines[currentLineIndex];
+    
+    const commentSymbols: Record<string, string> = {
+      Python: '#',
+      Java: '//',
+      JavaScript: '//',
+      Html: '<!--',
+      MySQL: '--'
+    };
+    
+    const commentSymbol = commentSymbols[language || 'JavaScript'] || '//';
+    
+    if (currentLine.trim().startsWith(commentSymbol)) {
+      // Descomentar
+      lines[currentLineIndex] = currentLine.replace(new RegExp(`^\\s*${commentSymbol.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s?`), '');
+    } else {
+      // Comentar
+      lines[currentLineIndex] = commentSymbol + ' ' + currentLine;
+    }
+    
+    const newCode = lines.join('\n');
+    setCode(newCode);
+    addToHistory(newCode);
+    setShowMoreMenu(false);
   };
 
   // Función básica de formateo
@@ -87,30 +389,41 @@ const Editor = () => {
         const trimmed = line.trim();
         if (!trimmed) return '';
         
-        // Casos especiales para reducir indentación
+        // Reducir indentación antes de procesar líneas que terminan bloques
         if (trimmed === '}' || trimmed.startsWith('} ') || trimmed === '});') {
           indentLevel = Math.max(0, indentLevel - 1);
         }
         
         const indent = ' '.repeat(indentLevel * indentSize);
         
-        // Casos para aumentar indentación
+        // Aumentar indentación después de procesar líneas que abren bloques
         if (trimmed.endsWith('{') || 
             (trimmed.includes('if(') && trimmed.endsWith('{'))) {
           indentLevel++;
         }
         
-        // Agregar espacios alrededor de operadores
-        const formatted = trimmed
-          .replace(/=/g, ' = ')
-          .replace(/\+/g, ' + ')
-          .replace(/\s+/g, ' ') // Eliminar espacios múltiples
-          .replace(/\(\s+/g, '(') // Quitar espacio después de (
-          .replace(/\s+\)/g, ')'); // Quitar espacio antes de )
-        
-        return indent + formatted;
+        return indent + trimmed;
       })
       .join('\n');
+  };
+
+  // Función para mostrar opciones del menú
+  const handleMenuOptions = () => {
+    Alert.alert(
+      'Opciones del Editor',
+      'Selecciona una opción:',
+      [
+        { text: 'Nuevo archivo', onPress: () => console.log('Nuevo archivo') },
+        { text: 'Configuración', onPress: () => console.log('Configuración') },
+        { text: 'Ayuda', onPress: () => console.log('Ayuda') },
+        { text: 'Cancelar', style: 'cancel' }
+      ]
+    );
+  };
+
+  // Función para mostrar/ocultar menú "Más"
+  const handleMoreMenu = () => {
+    setShowMoreMenu(!showMoreMenu);
   };
 
   return (
@@ -124,11 +437,22 @@ const Editor = () => {
           <Text style={styles.fileName}>{fileName}</Text>
         </View>
         <View style={styles.headerRight}>
+          <TouchableOpacity 
+            style={[styles.headerButton, isSaving && styles.buttonDisabled]} 
+            onPress={handleSaveCode}
+            disabled={isSaving}
+          >
+            <Icon name={isSaving ? "loading" : "content-save"} size={moderateScale(20)} color={COLOR.icon} />
+          </TouchableOpacity>
           <TouchableOpacity style={styles.headerButton} onPress={handleSearch}>
             <Icon name="magnify" size={moderateScale(20)} color={COLOR.icon} />
           </TouchableOpacity>
-          <TouchableOpacity style={styles.runButton} onPress={handleRunCode}>
-            <Icon name="play" size={moderateScale(20)} color={COLOR.textPrimary} />
+          <TouchableOpacity 
+            style={[styles.runButton, isRunning && styles.buttonDisabled]} 
+            onPress={handleRunCode}
+            disabled={isRunning}
+          >
+            <Icon name={isRunning ? "loading" : "play"} size={moderateScale(20)} color={COLOR.textPrimary} />
           </TouchableOpacity>
         </View>
       </View>
@@ -141,7 +465,7 @@ const Editor = () => {
             <TextInput
               style={styles.searchInput}
               value={searchText}
-              onChangeText={setSearchText}
+              onChangeText={handleSearchTextChange}
               placeholder="Buscar en el código..."
               placeholderTextColor={COLOR.textSecondary}
               autoFocus
@@ -151,10 +475,13 @@ const Editor = () => {
             </TouchableOpacity>
           </View>
           <View style={styles.searchActions}>
-            <TouchableOpacity style={styles.searchActionButton}>
+            <Text style={styles.searchCounter}>
+              {searchMatches.length > 0 ? `${currentMatchIndex + 1}/${searchMatches.length}` : '0/0'}
+            </Text>
+            <TouchableOpacity style={styles.searchActionButton} onPress={handleSearchPrevious}>
               <Icon name="chevron-up" size={moderateScale(16)} color={COLOR.icon} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.searchActionButton}>
+            <TouchableOpacity style={styles.searchActionButton} onPress={handleSearchNext}>
               <Icon name="chevron-down" size={moderateScale(16)} color={COLOR.icon} />
             </TouchableOpacity>
           </View>
@@ -183,9 +510,14 @@ const Editor = () => {
               ))}
             </View>
             <TextInput
+              ref={textInputRef}
               style={styles.codeInput}
               value={code}
-              onChangeText={setCode}
+              onChangeText={handleCodeChange}
+              selection={{ start: cursorPosition, end: cursorPosition }}
+              onSelectionChange={({ nativeEvent: { selection } }) => {
+                updateCursorPosition(selection.start);
+              }}
               multiline
               autoCapitalize="none"
               autoCorrect={false}
@@ -199,43 +531,95 @@ const Editor = () => {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* Footer - TabBar del editor */}
+      {/* Footer - TabBar del editor con menú expandible */}
       <View style={styles.footer}>
+        {/* Menú "Más" expandible */}
+        {showMoreMenu && (
+          <Animated.View 
+            style={[
+              styles.moreMenuContainer,
+              {
+                transform: [{
+                  translateY: slideAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [50, 0]
+                  })
+                }],
+                opacity: slideAnim
+              }
+            ]}
+          >
+            <View style={styles.moreMenu}>
+              <TouchableOpacity style={styles.moreMenuItem} onPress={handleFormatCode}>
+                <Icon name="code-tags" size={moderateScale(20)} color={COLOR.icon} />
+                <Text style={styles.moreMenuText}>Formatear</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={styles.moreMenuItem} onPress={handleNavigateUp}>
+                <Icon name="chevron-up" size={moderateScale(20)} color={COLOR.icon} />
+                <Text style={styles.moreMenuText}>Arriba</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={styles.moreMenuItem} onPress={handleNavigateDown}>
+                <Icon name="chevron-down" size={moderateScale(20)} color={COLOR.icon} />
+                <Text style={styles.moreMenuText}>Abajo</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={styles.moreMenuItem} onPress={handleDuplicateLine}>
+                <Icon name="content-duplicate" size={moderateScale(20)} color={COLOR.icon} />
+                <Text style={styles.moreMenuText}>Duplicar</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={styles.moreMenuItem} onPress={handleToggleComment}>
+                <Icon name="comment-outline" size={moderateScale(20)} color={COLOR.icon} />
+                <Text style={styles.moreMenuText}>Comentar</Text>
+              </TouchableOpacity>
+            </View>
+          </Animated.View>
+        )}
+
+        {/* TabBar principal */}
         <View style={styles.tabBar}>
-          <TouchableOpacity style={styles.tabButton}>
-            <Icon name="content-save" size={moderateScale(20)} color={COLOR.icon} />
-            <Text style={styles.tabButtonText}>Guardar</Text>
+          <TouchableOpacity 
+            style={[styles.tabButton, historyIndex <= 0 && styles.tabButtonDisabled]} 
+            onPress={handleUndo}
+            disabled={historyIndex <= 0}
+          >
+            <Icon name="undo" size={moderateScale(20)} color={historyIndex <= 0 ? COLOR.textSecondary : COLOR.icon} />
+            <Text style={[styles.tabButtonText, historyIndex <= 0 && styles.tabButtonTextDisabled]}>Deshacer</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.tabButton}>
-            <Icon name="undo" size={moderateScale(20)} color={COLOR.icon} />
-            <Text style={styles.tabButtonText}>Deshacer</Text>
+          <TouchableOpacity 
+            style={[styles.tabButton, historyIndex >= history.length - 1 && styles.tabButtonDisabled]} 
+            onPress={handleRedo}
+            disabled={historyIndex >= history.length - 1}
+          >
+            <Icon name="redo" size={moderateScale(20)} color={historyIndex >= history.length - 1 ? COLOR.textSecondary : COLOR.icon} />
+            <Text style={[styles.tabButtonText, historyIndex >= history.length - 1 && styles.tabButtonTextDisabled]}>Rehacer</Text>
           </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.tabButton}>
-            <Icon name="redo" size={moderateScale(20)} color={COLOR.icon} />
-            <Text style={styles.tabButtonText}>Rehacer</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.tabButton} onPress={handleFormatCode}>
-            <Icon name="format-text" size={moderateScale(20)} color={COLOR.icon} />
-            <Text style={styles.tabButtonText}>Formato</Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity style={styles.tabButton}>
+
+          <TouchableOpacity style={styles.tabButton} onPress={handleNavigateLeft}>
             <Icon name="chevron-left" size={moderateScale(20)} color={COLOR.icon} />
+            <Text style={styles.tabButtonText}>Izquierda</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.tabButton} onPress={handleNavigateRight}>
+            <Icon name="chevron-right" size={moderateScale(20)} color={COLOR.icon} />
+            <Text style={styles.tabButtonText}>Derecha</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.tabButton}>
-            <Icon name="chevron-right" size={moderateScale(20)} color={COLOR.icon} />
+          <TouchableOpacity 
+            style={[styles.tabButton, showMoreMenu && styles.tabButtonActive]} 
+            onPress={handleMoreMenu}
+          >
+            <Icon name="dots-horizontal" size={moderateScale(20)} color={showMoreMenu ? COLOR.primary : COLOR.icon} />
+            <Text style={[styles.tabButtonText, showMoreMenu && styles.tabButtonTextActive]}>Más</Text>
           </TouchableOpacity>
         </View>
       </View>
     </SafeAreaView>
   );
 };
-
-export default Editor;
 
 const styles = StyleSheet.create({
   container: {
@@ -289,10 +673,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: COLOR.primary,
-    paddingHorizontal: moderateScale(16),
+    paddingHorizontal: moderateScale(12),
     paddingVertical: verticalScale(8),
     borderRadius: moderateScale(8),
-    gap: scale(6),
+    gap: scale(4),
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
   searchContainer: {
     backgroundColor: COLOR.surface,
@@ -322,7 +709,14 @@ const styles = StyleSheet.create({
   },
   searchActions: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: scale(4),
+  },
+  searchCounter: {
+    color: COLOR.textSecondary,
+    fontSize: moderateScale(12),
+    minWidth: moderateScale(35),
+    textAlign: 'center',
   },
   searchActionButton: {
     padding: moderateScale(6),
@@ -376,26 +770,75 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 2,
   },
+  moreMenuContainer: {
+    position: 'absolute',
+    bottom: '100%',
+    left: 0,
+    right: 0,
+    backgroundColor: COLOR.surface,
+    borderTopWidth: 1,
+    borderTopColor: COLOR.border,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+  },
+  moreMenu: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    paddingHorizontal: moderateScale(8),
+    paddingVertical: verticalScale(8),
+  },
+  moreMenuItem: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: moderateScale(8),
+    paddingVertical: verticalScale(6),
+    borderRadius: moderateScale(6),
+    minWidth: moderateScale(48),
+    gap: verticalScale(2),
+  },
+  moreMenuText: {
+    color: COLOR.textSecondary,
+    fontSize: moderateScale(10),
+    fontWeight: '500',
+  },
   tabBar: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-around',
     paddingHorizontal: moderateScale(8),
-    paddingVertical: verticalScale(4),
-    paddingBottom: verticalScale(16),
-    gap: scale(4),
+    paddingVertical: verticalScale(6),
+    paddingBottom: verticalScale(12),
   },
   tabButton: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: moderateScale(12),
+    paddingHorizontal: moderateScale(8),
     paddingVertical: verticalScale(6),
     borderRadius: moderateScale(6),
-    minWidth: moderateScale(44),
+    minWidth: moderateScale(48),
     gap: verticalScale(2),
+  },
+  tabButtonActive: {
+    backgroundColor: COLOR.surfaceLight,
   },
   tabButtonText: {
     color: COLOR.textSecondary,
     fontSize: moderateScale(10),
     fontWeight: '500',
   },
+  tabButtonTextActive: {
+    color: COLOR.primary,
+  },
+  tabButtonDisabled: {
+    opacity: 0.4,
+  },
+  tabButtonTextDisabled: {
+    color: COLOR.textSecondary,
+  },
 });
+
+export default Editor;
