@@ -279,50 +279,76 @@ const Editor = () => {
     let currentPos = 0;
 
     for (let i = 0; i < lines.length; i++) {
-      const lineLength = lines[i].length + 1; // +1 por el salto de línea
-      if (position < currentPos + lineLength) {
+      const lineLength = lines[i].length;
+      const lineEnd = currentPos + lineLength;
+      
+      // Si la posición está dentro de esta línea
+      if (position >= currentPos && position <= lineEnd) {
         return {
           lineIndex: i,
           column: position - currentPos,
           lineStart: currentPos,
         };
       }
-      currentPos += lineLength;
+      
+      // Mover al inicio de la siguiente línea (+1 por el \n)
+      currentPos = lineEnd + 1;
     }
 
-    // Si no encontró la línea, devolver última
+    // Si llegamos aquí, la posición está al final del código
     return {
       lineIndex: lines.length - 1,
       column: lines[lines.length - 1].length,
-      lineStart: code.length - lines[lines.length - 1].length,
+      lineStart: currentPos - lines[lines.length - 1].length - 1,
     };
   };
 
   // Función para navegar líneas hacia arriba
   const handleNavigateUp = () => {
+    const lines = code.split('\n');
     const { lineIndex, column } = getCurrentLineAndColumn(cursorPosition);
-    if (lineIndex > 0) {
-      const prevLine = code.split('\n')[lineIndex - 1];
-      const newPosition = code
-        .split('\n')
-        .slice(0, lineIndex - 1)
-        .reduce((acc, line) => acc + line.length + 1, 0) + Math.min(column, prevLine.length);
 
+    // Solo moverse si no estamos en la primera línea
+    if (lineIndex > 0) {
+      const prevLine = lines[lineIndex - 1];
+      
+      // Calcular la posición del inicio de la línea anterior
+      let prevLineStart = 0;
+      for (let i = 0; i < lineIndex - 1; i++) {
+        prevLineStart += lines[i].length + 1; // +1 por el \n
+      }
+      
+      // Mantener la columna si es posible, sino ir al final de la línea anterior
+      const newColumn = Math.min(column, prevLine.length);
+      const newPosition = prevLineStart + newColumn;
+      
       updateCursorPosition(newPosition);
     }
+    setShowMoreMenu(false);
   };
 
+  // Función para navegar líneas hacia abajo
   const handleNavigateDown = () => {
-    const { lineIndex, column } = getCurrentLineAndColumn(cursorPosition);
     const lines = code.split('\n');
-    if (lineIndex < lines.length - 1) {
-      const newPosition = code
-        .split('\n')
-        .slice(0, lineIndex + 1)
-        .reduce((acc, line) => acc + line.length + 1, 0) + Math.min(column, lines[lineIndex + 1].length);
+    const { lineIndex, column } = getCurrentLineAndColumn(cursorPosition);
 
+    // Solo moverse si no estamos en la última línea
+    if (lineIndex < lines.length - 1) {
+      const nextLine = lines[lineIndex + 1];
+      
+      // Calcular la posición del inicio de la línea siguiente
+      let nextLineStart = 0;
+      for (let i = 0; i <= lineIndex; i++) {
+        nextLineStart += lines[i].length + 1; // +1 por el \n
+      }
+      
+      // Mantener la columna si es posible, sino ir al final de la línea siguiente
+      const newColumn = Math.min(column, nextLine.length);
+      const newPosition = nextLineStart + newColumn;
+      
       updateCursorPosition(newPosition);
     }
+    setShowMoreMenu(false);
   };
 
   // Función para formatear código
