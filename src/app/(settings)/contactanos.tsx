@@ -5,7 +5,7 @@ import { moderateScale, verticalScale } from 'react-native-size-matters';
 import { COLOR } from '../../constants/colors';
 import { Icon } from '../../constants/icons';
 
-const EMAIL = 'tuemail@ejemplo.com';
+const EMAIL = 'tikitaka@gmail.com';
 
 const Contactanos = () => {
   const router = useRouter();

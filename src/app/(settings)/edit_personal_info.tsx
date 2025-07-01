@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, Image, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Image, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { moderateScale, verticalScale } from 'react-native-size-matters';
 import { COLOR } from '../../constants/colors';
 import { Icon } from '../../constants/icons';
@@ -81,11 +81,23 @@ const EditPersonalInfo = () => {
         await AsyncStorage.setItem('users', JSON.stringify(users));
       }
       await AsyncStorage.setItem('user', JSON.stringify({ ...user, nombre, email, telefono, username: nombre, image }));
-      Alert.alert('Éxito', 'Datos actualizados correctamente');
-      router.back();
+      setAlert({
+        visible: true,
+        type: 'success',
+        message: image ? '¡Tu foto de perfil se guardó correctamente!' : 'Datos actualizados correctamente',
+      });
+      // Espera un poco antes de volver atrás para que el usuario vea el mensaje
+      setTimeout(() => {
+        setAlert(a => ({ ...a, visible: false }));
+        router.back();
+      }, 1800);
     } catch (e) {
       console.error('Error al guardar:', e);
-      Alert.alert('Error', 'No se pudieron guardar los cambios');
+      setAlert({
+        visible: true,
+        type: 'error',
+        message: 'No se pudieron guardar los cambios',
+      });
     } finally {
       setLoading(false);
     }
