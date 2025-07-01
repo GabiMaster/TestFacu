@@ -9,6 +9,7 @@ interface EditorHeaderProps {
   isSaving: boolean;
   isRunning: boolean;
   showConsole: boolean;
+  hasUnsavedChanges?: boolean;
   onMenuPress: () => void;
   onSavePress: () => void;
   onSearchPress: () => void;
@@ -21,6 +22,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
   isSaving,
   isRunning,
   showConsole,
+  hasUnsavedChanges = false,
   onMenuPress,
   onSavePress,
   onSearchPress,
@@ -34,7 +36,10 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
         <TouchableOpacity style={styles.menuButton} onPress={onMenuPress}>
           <Icon name="menu" size={moderateScale(20)} color={COLOR.icon} />
         </TouchableOpacity>
-        <Text style={styles.fileName}>{fileName}</Text>
+        <Text style={styles.fileName}>
+          {fileName}
+          {hasUnsavedChanges && <Text style={styles.unsavedIndicator}> •</Text>}
+        </Text>
       </View>
       <View style={styles.headerRight}>
         <TouchableOpacity 
@@ -103,6 +108,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: scale(12),
     flex: 1,
+  },
+  unsavedIndicator: {
+    color: COLOR.warning,
+    fontSize: moderateScale(20),
+    fontWeight: 'bold',
   },
   headerButton: {
     padding: moderateScale(8),

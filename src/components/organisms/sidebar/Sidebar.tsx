@@ -1,14 +1,15 @@
 import { COLOR } from '@/src/constants/colors';
 import { useSidebarContext } from '@/src/utils/contexts/SidebarContext';
+import { router } from 'expo-router';
 import React, { useEffect, useRef } from 'react';
 import {
-  Alert,
-  Animated,
-  Dimensions,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    Alert,
+    Animated,
+    Dimensions,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { moderateScale } from 'react-native-size-matters';
 import { SidebarBody } from './SidebarBody';
@@ -33,7 +34,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
     closeSidebar,
     selectFile,
     toggleFolder,
-    createNewFile
+    createNewFile,
+    createNewFolder
   } = useSidebarContext();
 
   const slideAnim = useRef(new Animated.Value(-SIDEBAR_WIDTH)).current;
@@ -73,20 +75,30 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
   const handleNewFile = () => {
     Alert.prompt(
       'Nuevo Archivo',
-      'Ingresa el nombre del archivo:',
+      'Ingresa el nombre del archivo (con extensión):',
       [
         { text: 'Cancelar', style: 'cancel' },
         {
           text: 'Crear',
           onPress: (fileName) => {
             if (fileName?.trim()) {
-              createNewFile(fileName.trim(), '/starter-project');
+              // Crear el archivo
+              createNewFile(fileName.trim());
+              
+              // Cerrar sidebar y navegar al editor
+              closeSidebar();
+              router.push('/(editor)/editor');
+              
+              // Mensaje de éxito
+              setTimeout(() => {
+                Alert.alert('✅ Archivo Creado', `"${fileName}" se creó correctamente y está listo para editar.`);
+              }, 500);
             }
           }
         }
       ],
       'plain-text',
-      'nuevo-archivo.txt'
+      'mi-archivo.js'
     );
   };
 
@@ -100,13 +112,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
           text: 'Crear',
           onPress: (folderName) => {
             if (folderName?.trim()) {
-              console.log('Crear carpeta:', folderName);
+              // Crear la carpeta
+              createNewFolder(folderName.trim());
+              
+              // Mensaje de éxito
+              Alert.alert('✅ Carpeta Creada', `"${folderName}" se creó correctamente.`);
             }
           }
         }
       ],
       'plain-text',
-      'nueva-carpeta'
+      'mi-carpeta'
     );
   };
 

@@ -1,13 +1,39 @@
 import { COLOR } from '@/src/constants/colors';
 import { Icon } from '@/src/constants/icons';
 import { useAuth } from '@/src/hooks/useAuth';
+import { useSidebarContext } from '@/src/utils/contexts/SidebarContext';
 import { router } from 'expo-router';
 import React from 'react';
-import { Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
 
 const Home = () => {
   const { user } = useAuth();
+  const { importFile } = useSidebarContext();
+
+  // Función para importar archivo
+  const handleImportFile = async () => {
+    try {
+      await importFile();
+      Alert.alert('✅ Archivo Importado', 'El archivo se importó correctamente y está disponible en el editor.');
+      // Navegar al editor
+      router.push('/(editor)/editor');
+    } catch {
+      Alert.alert('❌ Error', 'No se pudo importar el archivo. Inténtalo de nuevo.');
+    }
+  };
+
+  // Función para importar carpeta (simulada - en móvil no es posible importar carpetas completas)
+  const handleImportFolder = () => {
+    Alert.alert(
+      '📁 Importar Carpeta',
+      'En dispositivos móviles no es posible importar carpetas completas. ¿Te gustaría importar archivos individuales?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Importar Archivos', onPress: handleImportFile }
+      ]
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -45,11 +71,17 @@ const Home = () => {
             <Icon name="addfile" type="ant" size={moderateScale(32)} color={COLOR.primary} />
             <Text style={styles.quickActionText}>Nuevo Proyecto...</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.quickAction}>
+          <TouchableOpacity
+            style={styles.quickAction}
+            onPress={handleImportFile}
+          >
             <Icon name="file-open" type='materialIcons' size={moderateScale(32)} color={COLOR.primary} />
             <Text style={styles.quickActionText}>Abrir Archivo...</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.quickAction}>
+          <TouchableOpacity
+            style={styles.quickAction}
+            onPress={handleImportFolder}
+          >
             <Icon name="folderopen" type='ant' size={moderateScale(32)} color={COLOR.primary} />
             <Text style={styles.quickActionText}>Abrir Carpeta...</Text>
           </TouchableOpacity>

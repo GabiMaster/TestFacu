@@ -37,6 +37,16 @@ const Settings = () => {
           </TouchableOpacity>
         </View>
 
+        {/* Developer Section */}
+        <Text style={styles.sectionTitle}>Desarrollo</Text>
+        <View style={styles.sectionBox}>
+          <TouchableOpacity style={styles.itemRow} onPress={() => router.push('/(settings)/file_system_demo')}>
+            <Icon name="folder-cog-outline" size={22} color={COLOR.icon} />
+            <Text style={styles.itemText}>Demo Sistema de Archivos</Text>
+            <Text style={styles.languageLabel}>NUEVO</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Seguridad Section */}
         <Text style={styles.sectionTitle}>Seguridad</Text>
         <View style={styles.sectionBox}>

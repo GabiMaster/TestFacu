@@ -13,8 +13,11 @@ interface SidebarContextType {
   selectFile: (file: FileItem) => void;
   toggleFolder: (folderId: string) => void;
   createNewFile: (name: string, parentPath?: string) => void;
+  createNewFolder: (name: string, parentPath?: string) => void;
   deleteFile: (fileId: string) => void;
   renameFile: (fileId: string, newName: string) => void;
+  importFile: () => Promise<void>;
+  exportFile: (fileId: string, fileName: string) => Promise<void>;
 }
 
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined);

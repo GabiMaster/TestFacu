@@ -2,6 +2,7 @@ import { FileIcon } from '@/src/components/atoms/FileIcon';
 import { COLOR } from '@/src/constants/colors';
 import { Icon } from '@/src/constants/icons';
 import { FileItem as FileItemType } from '@/src/hooks/sidebar/useSidebar';
+import { router } from 'expo-router';
 import React from 'react';
 import {
     Alert,
@@ -33,7 +34,9 @@ export const FileItem: React.FC<FileItemProps> = ({
     if (file.type === 'folder' && onToggleFolder) {
       onToggleFolder(file.id);
     } else {
+      // Seleccionar archivo y navegar al editor
       onSelect(file);
+      router.push('/(editor)/editor');
     }
   };
 

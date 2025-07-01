@@ -1,12 +1,11 @@
 import { COLOR } from '@/src/constants/colors';
-import { SidebarProvider } from '@/src/utils/contexts/SidebarContext';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
 
 export default function EditorLayout() {
   return (
-    <SidebarProvider>
+    <>
       <StatusBar style="light" backgroundColor={COLOR.surface} />
       <Stack
         screenOptions={{
@@ -30,6 +29,6 @@ export default function EditorLayout() {
           }}
         />
       </Stack>
-    </SidebarProvider>
+    </>
   );
 }

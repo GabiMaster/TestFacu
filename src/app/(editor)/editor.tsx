@@ -1,6 +1,6 @@
 import { useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { KeyboardAvoidingView, Platform, SafeAreaView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 
 // Organisms
 import { CodeEditor, CodeEditorRef } from '@/src/components/organisms/editor/CodeEditor';
@@ -13,6 +13,7 @@ import { Sidebar } from '@/src/components/organisms/sidebar/Sidebar';
 // Hooks
 import { useCodeHistory } from '@/src/hooks/editor/useCodeHistory';
 import { useCodeSearch } from '@/src/hooks/editor/useCodeSearch';
+import { useEditorFile } from '@/src/hooks/editor/useEditorFile';
 
 // Utils
 import { COLOR } from '@/src/constants/colors';
@@ -25,6 +26,16 @@ const Editor = () => {
   
   // Contexto del sidebar
   const { openSidebar, selectedFile } = useSidebarContext();
+  
+  // Hook para manejar archivos
+  const {
+    content: fileContent,
+    isLoading: isLoadingFile,
+    isSaving: isSavingFile,
+    hasUnsavedChanges,
+    updateContent,
+    saveFileContent
+  } = useEditorFile(selectedFile);
   
   // Estados principales
   const [code, setCode] = useState('');
@@ -62,35 +73,45 @@ const Editor = () => {
     }
   }, [language]);
 
-  // Efecto para cargar archivo seleccionado del sidebar
+  // Efecto para sincronizar contenido del archivo con el estado del editor
+  useEffect(() => {
+    if (fileContent !== code && fileContent !== '') {
+      setCode(fileContent);
+    }
+  }, [fileContent, code]);
+
+  // Efecto para actualizar nombre del archivo
   useEffect(() => {
     if (selectedFile && selectedFile.type === 'file') {
       setFileName(selectedFile.name);
-      // Aquí podrías cargar el contenido del archivo
-      // setCode(contenidoDelArchivo);
     }
   }, [selectedFile]);
 
   // Handlers principales
   const handleCodeChange = useCallback((newCode: string) => {
     setCode(newCode);
+    updateContent(newCode); // Actualizar contenido del archivo
     if (codeHistory.history[codeHistory.historyIndex] !== newCode) {
       codeHistory.addToHistory(newCode);
     }
     if (codeSearch.showSearch && codeSearch.searchText) {
       codeSearch.updateSearchMatches(newCode, codeSearch.searchText);
     }
-  }, [codeHistory, codeSearch]);
+  }, [codeHistory, codeSearch, updateContent]);
 
   const handleSave = useCallback(async () => {
     setIsSaving(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      console.log('Guardando:', { fileName, code });
+      const success = await saveFileContent();
+      if (success) {
+        console.log('Archivo guardado exitosamente:', fileName);
+      } else {
+        console.error('Error al guardar el archivo');
+      }
     } finally {
       setIsSaving(false);
     }
-  }, [fileName, code]);
+  }, [saveFileContent, fileName]);
 
   const handleRun = useCallback(async () => {
     if (!code.trim()) return;
@@ -234,7 +255,7 @@ const Editor = () => {
       <SafeAreaView style={styles.container}>
         <EditorHeader
           fileName={fileName}
-          isSaving={isSaving}
+          isSaving={isSaving || isSavingFile}
           isRunning={isRunning}
           showConsole={showConsole}
           onMenuPress={handleMenuPress}
@@ -242,7 +263,14 @@ const Editor = () => {
           onSearchPress={codeSearch.toggleSearch}
           onConsoleToggle={() => setShowConsole(!showConsole)}
           onRunPress={handleRun}
+          hasUnsavedChanges={hasUnsavedChanges}
         />
+
+        {isLoadingFile && (
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingText}>Cargando archivo...</Text>
+          </View>
+        )}
 
         {codeSearch.showSearch && (
           <SearchBar
@@ -337,6 +365,15 @@ const styles = StyleSheet.create({
   mainContent: {
     flex: 1,
     flexDirection: 'column',
+  },
+  loadingContainer: {
+    padding: 20,
+    alignItems: 'center',
+    backgroundColor: COLOR.surface,
+  },
+  loadingText: {
+    color: COLOR.textSecondary,
+    fontSize: 14,
   },
 });
 
