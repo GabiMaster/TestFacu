@@ -36,9 +36,16 @@ const Home = () => {
 
   // Función para clonar repositorio Git
   const handleCloneRepository = () => {
-    // Abrir sidebar y cambiar a la vista de Git
-    openSidebar();
+    console.log('🔧 Home: handleCloneRepository called');
+    
+    // Primero cambiar la vista de la sidebar a Git
     changeView('git');
+    openSidebar();
+    
+    // Luego navegar al editor donde se puede ver la sidebar
+    router.push('/(editor)/editor');
+    
+    console.log('✅ Home: Navigated to editor with Git view');
   };
 
   // Función para abrir un proyecto reciente
@@ -244,7 +251,7 @@ const Home = () => {
       </ScrollView>
     </SafeAreaView>
   );
-};
+}; // ← Este cierra el componente Home
 
 function getStyles(COLOR: any) {
   return StyleSheet.create({
@@ -430,6 +437,6 @@ function getStyles(COLOR: any) {
       marginTop: verticalScale(2),
     },
   });
-}
+};
 
 export default Home;

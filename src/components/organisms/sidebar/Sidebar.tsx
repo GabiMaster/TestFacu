@@ -58,6 +58,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
 
   // Animación del sidebar
   useEffect(() => {
+    console.log('🔧 Sidebar: Animation effect triggered, isOpen:', isOpen);
     Animated.parallel([
       Animated.timing(slideAnim, {
         toValue: isOpen ? 0 : -SIDEBAR_WIDTH,
@@ -71,6 +72,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
       })
     ]).start();
   }, [isOpen, slideAnim, overlayOpacity]);
+
+  // Log changes in currentView
+  useEffect(() => {
+    console.log('🔧 Sidebar: currentView changed to:', currentView);
+  }, [currentView]);
 
   // Contar archivos total
   const getTotalFileCount = (): number => {
@@ -177,12 +183,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
 
   // Renderizar contenido según la vista actual
   const renderSidebarContent = () => {
-    // Removemos el log que se ejecuta en cada render
+    console.log('🔧 Sidebar: renderSidebarContent called with currentView:', currentView);
+    
     switch (currentView) {
       case 'home':
+        console.log('🏠 Sidebar: Rendering SidebarHomeView');
         return <SidebarHomeView onClose={closeSidebar} />;
       
       case 'files':
+        console.log('📁 Sidebar: Rendering SidebarBody (files view)');
         return (
           <>
             <SidebarBody
@@ -206,12 +215,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
         );
       
       case 'search':
+        console.log('🔍 Sidebar: Rendering SidebarSearchView');
         return <SidebarSearchView onClose={closeSidebar} />;
       
       case 'git':
+        console.log('🔧 Sidebar: Rendering SidebarGitView');
         return <SidebarGitView onClose={closeSidebar} />;
       
       case 'user':
+        console.log('👤 Sidebar: Rendering user placeholder');
         return (
           <View style={styles.placeholderView}>
             <Text style={styles.placeholderText}>Perfil de Usuario</Text>
@@ -220,6 +232,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
         );
       
       default:
+        console.log('🔧 Sidebar: Rendering default SidebarBody, currentView:', currentView);
         console.log('🔧 Sidebar: Passing setCurrentFolder to SidebarBody:', typeof setCurrentFolder);
         return (
           <SidebarBody

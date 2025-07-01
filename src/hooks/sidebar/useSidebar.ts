@@ -105,11 +105,15 @@ export const useSidebar = () => {
   }, []);
 
   const openSidebar = useCallback(() => {
+    console.log('🔧 useSidebar: openSidebar called, setting isOpen to true');
     setIsOpen(true);
+    console.log('✅ useSidebar: openSidebar completed');
   }, []);
 
   const changeView = useCallback((view: SidebarView) => {
+    console.log('🔧 useSidebar: changeView called with:', view);
     setCurrentView(view);
+    console.log('✅ useSidebar: changeView completed, new view:', view);
   }, []);
 
   const selectFile = useCallback((file: FileItem) => {
