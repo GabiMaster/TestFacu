@@ -14,6 +14,7 @@ const EditPersonalInfo = () => {
   const { user, updateUser } = useAuth();
   const router = useRouter();
   const [nombre, setNombre] = useState(user?.nombre || user?.username || '');
+  const [apellido, setApellido] = useState(user?.apellido || '');
   const [email, setEmail] = useState(user?.email || '');
   const [telefono, setTelefono] = useState(user?.telefono || '');
   const [image, setImage] = useState(user?.image || null);
@@ -75,20 +76,22 @@ const EditPersonalInfo = () => {
   const handleSave = async () => {
     setLoading(true);
     try {
-      await updateUser({ nombre, email, telefono, username: nombre, image });
+      await updateUser({ nombre, apellido, email, telefono, username: nombre, image });
       // Guarda la imagen en el usuario persistente
       const usersRaw = await AsyncStorage.getItem('users');
       let users = usersRaw ? JSON.parse(usersRaw) : [];
       const idx = users.findIndex((u: any) => u.email === user?.email);
       if (idx !== -1) {
-        users[idx] = { ...users[idx], nombre, email, telefono, username: nombre, image };
+        users[idx] = { ...users[idx], nombre, apellido, email, telefono, username: nombre, image };
         await AsyncStorage.setItem('users', JSON.stringify(users));
       }
-      await AsyncStorage.setItem('user', JSON.stringify({ ...user, nombre, email, telefono, username: nombre, image }));
+      await AsyncStorage.setItem('user', JSON.stringify({ ...user, nombre, apellido, email, telefono, username: nombre, image }));
       setAlert({
         visible: true,
         type: 'success',
-        message: image ? '¡Tu foto de perfil se guardó correctamente!' : 'Datos actualizados correctamente',
+        message: (image && (!user?.image || image !== user?.image))
+          ? '¡Tu foto de perfil se guardó correctamente!'
+          : 'Datos actualizados correctamente',
       });
       // Espera un poco antes de volver atrás para que el usuario vea el mensaje
       setTimeout(() => {
@@ -133,12 +136,20 @@ const EditPersonalInfo = () => {
             </TouchableOpacity>
           </View>
         </View>
-        <Text style={styles.label}>Nombre Completo</Text>
+        <Text style={styles.label}>Nombre</Text>
         <TextInput
           style={styles.input}
           value={nombre}
           onChangeText={setNombre}
-          placeholder="Nombre Completo"
+          placeholder="Nombre"
+          placeholderTextColor={COLOR.textSecondary}
+        />
+        <Text style={styles.label}>Apellido</Text>
+        <TextInput
+          style={styles.input}
+          value={apellido}
+          onChangeText={setApellido}
+          placeholder="Apellido"
           placeholderTextColor={COLOR.textSecondary}
         />
         <Text style={styles.label}>Correo Electrónico</Text>
