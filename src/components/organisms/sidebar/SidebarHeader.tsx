@@ -1,5 +1,6 @@
 import { COLOR } from '@/src/constants/colors';
 import { Icon } from '@/src/constants/icons';
+import { useSidebarContext } from '@/src/utils/contexts/SidebarContext';
 import React from 'react';
 import {
   StyleSheet,
@@ -22,57 +23,158 @@ export const SidebarHeader: React.FC<SidebarHeaderProps> = ({
   onNewFolder,
   onRefresh
 }) => {
+  const { currentView, changeView } = useSidebarContext();
+
+  const handleHomePress = () => {
+    changeView('home');
+  };
+
+  const handleFolderPress = () => {
+    changeView('files');
+  };
+
+  const handleSearchPress = () => {
+    changeView('search');
+  };
+
+  const handleGitPress = () => {
+    changeView('git');
+  };
+
   return (
-    <View style={styles.header}>
-      <View style={styles.headerLeft}>
-        <Text style={styles.headerTitle}>ARCHIVOS</Text>
-      </View>
-      
-      <View style={styles.headerRight}>
+    <View>
+      {/* Fila de navegación superior */}
+      <View style={styles.navigationRow}>
         <TouchableOpacity 
-          style={styles.headerButton}
-          onPress={onNewFile}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          style={[styles.navButton, currentView === 'home' && styles.navButtonActive]}
+          onPress={handleHomePress}
         >
-          <Icon name="file-plus-outline" size={moderateScale(18)} color={COLOR.icon} />
+          <Icon name="home-outline" size={moderateScale(22)} color={currentView === 'home' ? COLOR.primary : COLOR.icon} />
         </TouchableOpacity>
         
         <TouchableOpacity 
-          style={styles.headerButton}
-          onPress={onNewFolder}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          style={[styles.navButton, currentView === 'files' && styles.navButtonActive]}
+          onPress={handleFolderPress}
         >
-          <Icon name="folder-plus-outline" size={moderateScale(18)} color={COLOR.icon} />
+          <Icon name="folder-outline" size={moderateScale(22)} color={currentView === 'files' ? COLOR.primary : COLOR.icon} />
         </TouchableOpacity>
         
         <TouchableOpacity 
-          style={styles.headerButton}
-          onPress={onRefresh}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          style={[styles.navButton, currentView === 'search' && styles.navButtonActive]}
+          onPress={handleSearchPress}
         >
-          <Icon name="refresh" size={moderateScale(18)} color={COLOR.icon} />
+          <Icon name="file-search-outline" size={moderateScale(22)} color={currentView === 'search' ? COLOR.primary : COLOR.icon} />
         </TouchableOpacity>
         
         <TouchableOpacity 
-          style={styles.headerButton}
-          onPress={onClose}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          style={[styles.navButton, currentView === 'git' && styles.navButtonActive]}
+          onPress={handleGitPress}
         >
-          <Icon name="close" size={moderateScale(18)} color={COLOR.icon} />
+          <Icon name="source-branch" size={moderateScale(22)} color={currentView === 'git' ? COLOR.primary : COLOR.icon} />
         </TouchableOpacity>
       </View>
+
+      {/* Header de archivos - solo mostrar en vista de archivos */}
+      {currentView === 'files' && (
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <Text style={styles.headerTitle}>ARCHIVOS</Text>
+          </View>
+          
+          <View style={styles.headerRight}>
+            <TouchableOpacity 
+              style={styles.headerButton}
+              onPress={onNewFile}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Icon name="file-plus-outline" size={moderateScale(18)} color={COLOR.icon} />
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.headerButton}
+              onPress={onNewFolder}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Icon name="folder-plus-outline" size={moderateScale(18)} color={COLOR.icon} />
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.headerButton}
+              onPress={onRefresh}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Icon name="refresh" size={moderateScale(18)} color={COLOR.icon} />
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.headerButton}
+              onPress={onClose}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Icon name="close" size={moderateScale(18)} color={COLOR.icon} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      {/* Header para otras vistas */}
+      {currentView !== 'files' && (
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <Text style={styles.headerTitle}>
+              {currentView === 'home' && 'HOME'}
+              {currentView === 'search' && 'BÚSQUEDA'}
+              {currentView === 'git' && 'GIT'}
+              {currentView === 'user' && 'USUARIO'}
+            </Text>
+          </View>
+          
+          <View style={styles.headerRight}>
+            <TouchableOpacity 
+              style={styles.headerButton}
+              onPress={onClose}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Icon name="close" size={moderateScale(18)} color={COLOR.icon} />
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  navigationRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    paddingHorizontal: moderateScale(8),
+    paddingVertical: verticalScale(12),
+    paddingTop: verticalScale(36),
+    backgroundColor: COLOR.background,
+    borderBottomWidth: 1,
+    borderBottomColor: COLOR.border,
+  },
+  navButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: moderateScale(12),
+    paddingVertical: verticalScale(8),
+    borderRadius: moderateScale(4),
+    minWidth: moderateScale(40),
+  },
+  navButtonActive: {
+    backgroundColor: COLOR.surface,
+    borderBottomWidth: 2,
+    borderBottomColor: COLOR.primary,
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: moderateScale(16),
     paddingVertical: verticalScale(12),
-    paddingTop: verticalScale(36),
     backgroundColor: COLOR.surface,
     borderBottomWidth: 1,
     borderBottomColor: COLOR.border,

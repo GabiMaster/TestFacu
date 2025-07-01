@@ -1,13 +1,15 @@
-import { FileItem, useSidebar } from '@/src/hooks/sidebar/useSidebar';
+import { FileItem, SidebarView, useSidebar } from '@/src/hooks/sidebar/useSidebar';
 import React, { createContext, ReactNode, useContext } from 'react';
 
 interface SidebarContextType {
   isOpen: boolean;
+  currentView: SidebarView;
   files: FileItem[];
   selectedFile: FileItem | null;
   toggleSidebar: () => void;
   closeSidebar: () => void;
   openSidebar: () => void;
+  changeView: (view: SidebarView) => void;
   selectFile: (file: FileItem) => void;
   toggleFolder: (folderId: string) => void;
   createNewFile: (name: string, parentPath?: string) => void;

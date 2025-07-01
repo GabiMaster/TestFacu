@@ -22,6 +22,13 @@ export default function EditorLayout() {
             headerShown: false,
           }}
         />
+        <Stack.Screen 
+          name="home-redirect" 
+          options={{
+            title: 'Home Redirect',
+            headerShown: false,
+          }}
+        />
       </Stack>
     </SidebarProvider>
   );

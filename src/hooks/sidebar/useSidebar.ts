@@ -10,8 +10,11 @@ export interface FileItem {
   isOpen?: boolean;
 }
 
+export type SidebarView = 'files' | 'home' | 'search' | 'git' | 'user';
+
 export const useSidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [currentView, setCurrentView] = useState<SidebarView>('files');
   const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
   const [files, setFiles] = useState<FileItem[]>([
     {
@@ -63,6 +66,10 @@ export const useSidebar = () => {
 
   const openSidebar = useCallback(() => {
     setIsOpen(true);
+  }, []);
+
+  const changeView = useCallback((view: SidebarView) => {
+    setCurrentView(view);
   }, []);
 
   const selectFile = useCallback((file: FileItem) => {
@@ -136,11 +143,13 @@ export const useSidebar = () => {
 
   return {
     isOpen,
+    currentView,
     files,
     selectedFile,
     toggleSidebar,
     closeSidebar,
     openSidebar,
+    changeView,
     selectFile,
     toggleFolder,
     createNewFile,

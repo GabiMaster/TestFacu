@@ -2,19 +2,22 @@ import { COLOR } from '@/src/constants/colors';
 import { useSidebarContext } from '@/src/utils/contexts/SidebarContext';
 import React, { useEffect, useRef } from 'react';
 import {
-    Alert,
-    Animated,
-    Dimensions,
-    StyleSheet,
-    TouchableOpacity,
-    View
+  Alert,
+  Animated,
+  Dimensions,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
+import { moderateScale } from 'react-native-size-matters';
 import { SidebarBody } from './SidebarBody';
 import { SidebarFooter } from './SidebarFooter';
 import { SidebarHeader } from './SidebarHeader';
+import { SidebarHomeView } from './SidebarHomeView';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const SIDEBAR_WIDTH = SCREEN_WIDTH * 0.75; // 75% del ancho de pantalla
+const SIDEBAR_WIDTH = SCREEN_WIDTH * 0.75;
 
 interface SidebarProps {
   children: React.ReactNode;
@@ -23,6 +26,7 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
   const {
     isOpen,
+    currentView,
     files,
     selectedFile,
     closeSidebar,
@@ -117,6 +121,65 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
     console.log('Ayuda del explorador');
   };
 
+  // Renderizar contenido según la vista actual
+  const renderSidebarContent = () => {
+    switch (currentView) {
+      case 'home':
+        return <SidebarHomeView onClose={closeSidebar} />;
+      
+      case 'files':
+        return (
+          <>
+            <SidebarBody
+              files={files}
+              selectedFile={selectedFile}
+              onSelectFile={selectFile}
+              onToggleFolder={toggleFolder}
+            />
+            <SidebarFooter
+              fileCount={getTotalFileCount()}
+              onSettings={handleSettings}
+              onHelp={handleHelp}
+            />
+          </>
+        );
+      
+      case 'search':
+        return (
+          <View style={styles.placeholderView}>
+            <Text style={styles.placeholderText}>Vista de Búsqueda</Text>
+            <Text style={styles.placeholderSubtext}>Funcionalidad en desarrollo</Text>
+          </View>
+        );
+      
+      case 'git':
+        return (
+          <View style={styles.placeholderView}>
+            <Text style={styles.placeholderText}>Control de Versiones</Text>
+            <Text style={styles.placeholderSubtext}>Funcionalidad en desarrollo</Text>
+          </View>
+        );
+      
+      case 'user':
+        return (
+          <View style={styles.placeholderView}>
+            <Text style={styles.placeholderText}>Perfil de Usuario</Text>
+            <Text style={styles.placeholderSubtext}>Funcionalidad en desarrollo</Text>
+          </View>
+        );
+      
+      default:
+        return (
+          <SidebarBody
+            files={files}
+            selectedFile={selectedFile}
+            onSelectFile={selectFile}
+            onToggleFolder={toggleFolder}
+          />
+        );
+    }
+  };
+
   return (
     <View style={styles.container}>
       {/* Contenido principal */}
@@ -156,18 +219,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
           onRefresh={handleRefresh}
         />
         
-        <SidebarBody
-          files={files}
-          selectedFile={selectedFile}
-          onSelectFile={selectFile}
-          onToggleFolder={toggleFolder}
-        />
-        
-        <SidebarFooter
-          fileCount={getTotalFileCount()}
-          onSettings={handleSettings}
-          onHelp={handleHelp}
-        />
+        {renderSidebarContent()}
       </Animated.View>
     </View>
   );
@@ -207,5 +259,23 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 8,
     zIndex: 1000,
+  },
+  placeholderView: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: moderateScale(24),
+  },
+  placeholderText: {
+    color: COLOR.textPrimary,
+    fontSize: moderateScale(18),
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: moderateScale(8),
+  },
+  placeholderSubtext: {
+    color: COLOR.textSecondary,
+    fontSize: moderateScale(14),
+    textAlign: 'center',
   },
 });
