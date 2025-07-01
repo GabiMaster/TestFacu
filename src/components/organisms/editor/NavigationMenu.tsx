@@ -1,5 +1,6 @@
-import { COLOR } from '@/src/constants/colors';
 import { Icon } from '@/src/constants/icons';
+import { getColorsByTheme } from '@/src/constants/themeColors';
+import { useTheme } from '@/src/utils/contexts/ThemeContext';
 import React from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { moderateScale, verticalScale } from 'react-native-size-matters';
@@ -21,6 +22,9 @@ export const NavigationMenu: React.FC<NavigationMenuProps> = ({
   onDuplicateLine,
   onToggleComment,
 }) => {
+  const { theme } = useTheme();
+  const COLOR = getColorsByTheme(theme);
+  
   if (!show) return null;
 
   const handleFormatCode = () => {
@@ -34,6 +38,37 @@ export const NavigationMenu: React.FC<NavigationMenuProps> = ({
   const handleToggleComment = () => {
     onToggleComment();
   };
+
+  const styles = StyleSheet.create({
+    moreMenuContainer: {
+      backgroundColor: COLOR.surface,
+      borderTopWidth: 1,
+      borderTopColor: COLOR.border,
+      paddingHorizontal: moderateScale(16),
+      paddingVertical: verticalScale(8),
+      elevation: 2,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: -1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 2,
+    },
+    moreMenuContent: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-around',
+    },
+    moreMenuItem: {
+      alignItems: 'center',
+      paddingVertical: verticalScale(8),
+      paddingHorizontal: moderateScale(12),
+      borderRadius: moderateScale(6),
+    },
+    moreMenuItemText: {
+      color: COLOR.textSecondary,
+      fontSize: moderateScale(10),
+      marginTop: verticalScale(4),
+    },
+  });
 
   return (
     <Animated.View 
@@ -50,60 +85,22 @@ export const NavigationMenu: React.FC<NavigationMenuProps> = ({
         }
       ]}
     >
-      <View style={styles.moreMenu}>
+      <View style={styles.moreMenuContent}>
         <TouchableOpacity style={styles.moreMenuItem} onPress={handleFormatCode}>
           <Icon name="code-tags" size={moderateScale(20)} color={COLOR.icon} />
-          <Text style={styles.moreMenuText}>Formatear</Text>
+          <Text style={styles.moreMenuItemText}>Formatear</Text>
         </TouchableOpacity>
         
         <TouchableOpacity style={styles.moreMenuItem} onPress={handleDuplicateLine}>
           <Icon name="content-duplicate" size={moderateScale(20)} color={COLOR.icon} />
-          <Text style={styles.moreMenuText}>Duplicar</Text>
+          <Text style={styles.moreMenuItemText}>Duplicar</Text>
         </TouchableOpacity>
         
         <TouchableOpacity style={styles.moreMenuItem} onPress={handleToggleComment}>
           <Icon name="comment-outline" size={moderateScale(20)} color={COLOR.icon} />
-          <Text style={styles.moreMenuText}>Comentar</Text>
+          <Text style={styles.moreMenuItemText}>Comentar</Text>
         </TouchableOpacity>
       </View>
     </Animated.View>
   );
 };
-
-const styles = StyleSheet.create({
-  moreMenuContainer: {
-    position: 'absolute',
-    bottom: '100%',
-    left: 0,
-    right: 0,
-    backgroundColor: COLOR.surface,
-    borderTopWidth: 1,
-    borderTopColor: COLOR.border,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-  },
-  moreMenu: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    paddingHorizontal: moderateScale(8),
-    paddingVertical: verticalScale(8),
-  },
-  moreMenuItem: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: moderateScale(8),
-    paddingVertical: verticalScale(6),
-    borderRadius: moderateScale(6),
-    minWidth: moderateScale(48),
-    gap: verticalScale(2),
-  },
-  moreMenuText: {
-    color: COLOR.textSecondary,
-    fontSize: moderateScale(10),
-    fontWeight: '500',
-  },
-});

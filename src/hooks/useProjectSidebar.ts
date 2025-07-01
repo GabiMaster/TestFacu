@@ -7,7 +7,7 @@ import { useCallback, useEffect } from 'react';
  * con el proyecto actual
  */
 export const useProjectSidebar = () => {
-  const { files, updateCurrentProjectFiles } = useSidebarContext();
+  const { files, updateFiles } = useSidebarContext();
   const { currentProject } = useProjectContext();
 
   // Sincronizar archivos del sidebar con el proyecto actual
@@ -15,13 +15,13 @@ export const useProjectSidebar = () => {
     if (currentProject && files.length > 0) {
       try {
         console.log('🔄 Syncing sidebar files with current project');
-        await updateCurrentProjectFiles(files);
+        updateFiles(files);
         console.log('✅ Files synced with project');
       } catch (error) {
         console.error('❌ Error syncing files with project:', error);
       }
     }
-  }, [currentProject, files, updateCurrentProjectFiles]);
+  }, [currentProject, files, updateFiles]);
 
   // Sincronizar archivos cada vez que cambien
   useEffect(() => {

@@ -1,6 +1,7 @@
 import { InputModal } from '@/src/components/molecules/InputModal';
-import { COLOR } from '@/src/constants/colors';
+import { getColorsByTheme } from '@/src/constants/themeColors';
 import { useSidebarContext } from '@/src/utils/contexts/SidebarContext';
+import { useTheme } from '@/src/utils/contexts/ThemeContext';
 import { router } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
 import {
@@ -28,6 +29,9 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
+  const { theme } = useTheme();
+  const colors = getColorsByTheme(theme);
+  
   const {
     isOpen,
     currentView,
@@ -231,16 +235,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
       
       case 'git':
         console.log('🔧 Sidebar: Rendering SidebarGitView');
-        return <SidebarGitView onClose={closeSidebar} />;
-      
-      case 'user':
-        console.log('👤 Sidebar: Rendering user placeholder');
-        return (
-          <View style={styles.placeholderView}>
-            <Text style={styles.placeholderText}>Perfil de Usuario</Text>
-            <Text style={styles.placeholderSubtext}>Funcionalidad en desarrollo</Text>
-          </View>
-        );
+        return <SidebarGitView onClose={closeSidebar} />;        case 'user':
+          console.log('👤 Sidebar: Rendering user placeholder');
+          return (
+            <View style={getStyles(colors).placeholderView}>
+              <Text style={getStyles(colors).placeholderText}>Perfil de Usuario</Text>
+              <Text style={getStyles(colors).placeholderSubtext}>Funcionalidad en desarrollo</Text>
+            </View>
+          );
       
       default:
         console.log('🔧 Sidebar: Rendering default SidebarBody, currentView:', currentView);
@@ -260,40 +262,36 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
           />
         );
     }
-  };
+  };    return (
+      <View style={getStyles(colors).container}>
+        {/* Contenido principal */}
+        <View style={getStyles(colors).mainContent}>
+          {children}
+        </View>
 
-  return (
-    <View style={styles.container}>
-      {/* Contenido principal */}
-      <View style={styles.mainContent}>
-        {children}
-      </View>
-
-      {/* Overlay */}
-      {isOpen && (
+        {/* Overlay */}
+        {isOpen && (
+          <Animated.View 
+            style={[
+              getStyles(colors).overlay,
+              { opacity: overlayOpacity }
+            ]}
+          >
+            <TouchableOpacity 
+              style={getStyles(colors).overlayTouchable}
+              activeOpacity={1}
+              onPress={closeSidebar}
+            />
+          </Animated.View>
+        )}{/* Sidebar */}
         <Animated.View 
           style={[
-            styles.overlay,
-            { opacity: overlayOpacity }
+            getStyles(colors).sidebar,
+            {
+              transform: [{ translateX: slideAnim }]
+            }
           ]}
         >
-          <TouchableOpacity 
-            style={styles.overlayTouchable}
-            activeOpacity={1}
-            onPress={closeSidebar}
-          />
-        </Animated.View>
-      )}
-
-      {/* Sidebar */}
-      <Animated.View 
-        style={[
-          styles.sidebar,
-          {
-            transform: [{ translateX: slideAnim }]
-          }
-        ]}
-      >
         <SidebarHeader
           onClose={closeSidebar}
           onNewFile={handleNewFile}
@@ -333,7 +331,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
   },
@@ -358,9 +356,9 @@ const styles = StyleSheet.create({
     left: 0,
     bottom: 0,
     width: SIDEBAR_WIDTH,
-    backgroundColor: COLOR.background,
+    backgroundColor: colors.background,
     borderRightWidth: 1,
-    borderRightColor: COLOR.border,
+    borderRightColor: colors.border,
     elevation: 16,
     shadowColor: '#000',
     shadowOffset: { width: 2, height: 0 },
@@ -375,14 +373,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: moderateScale(24),
   },
   placeholderText: {
-    color: COLOR.textPrimary,
+    color: colors.textPrimary,
     fontSize: moderateScale(18),
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: moderateScale(8),
   },
   placeholderSubtext: {
-    color: COLOR.textSecondary,
+    color: colors.textSecondary,
     fontSize: moderateScale(14),
     textAlign: 'center',
   },

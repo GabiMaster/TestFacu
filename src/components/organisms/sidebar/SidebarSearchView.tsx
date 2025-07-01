@@ -1,6 +1,7 @@
-import { COLOR } from '@/src/constants/colors';
 import { Icon } from '@/src/constants/icons';
+import { getColorsByTheme } from '@/src/constants/themeColors';
 import { useSidebarContext } from '@/src/utils/contexts/SidebarContext';
+import { useTheme } from '@/src/utils/contexts/ThemeContext';
 import { FileSystemManager } from '@/src/utils/fileSystem/FileSystemManager';
 import { getDefaultContentByFileName } from '@/src/utils/fileSystem/defaultFileContents';
 import React, { useCallback, useState } from 'react';
@@ -32,6 +33,8 @@ interface SidebarSearchViewProps {
 
 export const SidebarSearchView: React.FC<SidebarSearchViewProps> = ({ onClose }) => {
   const { files, selectFile } = useSidebarContext();
+  const { theme } = useTheme();
+  const colors = getColorsByTheme(theme);
   const [searchText, setSearchText] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -173,10 +176,10 @@ export const SidebarSearchView: React.FC<SidebarSearchViewProps> = ({ onClose })
     const after = line.substring(matchEnd);
 
     return (
-      <Text style={styles.resultLineContent} numberOfLines={1}>
-        <Text style={styles.normalText}>{before}</Text>
-        <Text style={styles.highlightedText}>{match}</Text>
-        <Text style={styles.normalText}>{after}</Text>
+      <Text style={getStyles(colors).resultLineContent} numberOfLines={1}>
+        <Text style={getStyles(colors).normalText}>{before}</Text>
+        <Text style={getStyles(colors).highlightedText}>{match}</Text>
+        <Text style={getStyles(colors).normalText}>{after}</Text>
       </Text>
     );
   };
@@ -185,103 +188,103 @@ export const SidebarSearchView: React.FC<SidebarSearchViewProps> = ({ onClose })
   const totalMatches = searchResults.reduce((total, result) => total + result.matches.length, 0);
 
   return (
-    <View style={styles.container}>
+    <View style={getStyles(colors).container}>
       {/* Buscador */}
-      <View style={styles.searchContainer}>
-        <View style={styles.searchInputContainer}>
-          <Icon name="magnify" size={moderateScale(18)} color={COLOR.icon} />
+      <View style={getStyles(colors).searchContainer}>
+        <View style={getStyles(colors).searchInputContainer}>
+          <Icon name="magnify" size={moderateScale(18)} color={colors.icon} />
           <TextInput
-            style={styles.searchInput}
+            style={getStyles(colors).searchInput}
             value={searchText}
             onChangeText={handleSearchChange}
             placeholder="Buscar Texto"
-            placeholderTextColor={COLOR.textSecondary}
+            placeholderTextColor={colors.textSecondary}
             autoFocus={true}
           />
           {searchText.length > 0 && (
             <TouchableOpacity onPress={() => handleSearchChange('')}>
-              <Icon name="close" size={moderateScale(18)} color={COLOR.icon} />
+              <Icon name="close" size={moderateScale(18)} color={colors.icon} />
             </TouchableOpacity>
           )}
         </View>
       </View>
 
       {/* Barra de herramientas */}
-      <View style={styles.toolBar}>
-        <TouchableOpacity style={styles.toolButton}>
-          <Icon name="format-letter-case" size={moderateScale(16)} color={COLOR.icon} />
+      <View style={getStyles(colors).toolBar}>
+        <TouchableOpacity style={getStyles(colors).toolButton}>
+          <Icon name="format-letter-case" size={moderateScale(16)} color={colors.icon} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.toolButton}>
-          <Icon name="format-text" size={moderateScale(16)} color={COLOR.icon} />
+        <TouchableOpacity style={getStyles(colors).toolButton}>
+          <Icon name="format-text" size={moderateScale(16)} color={colors.icon} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.toolButton}>
-          <Icon name="regex" size={moderateScale(16)} color={COLOR.icon} />
+        <TouchableOpacity style={getStyles(colors).toolButton}>
+          <Icon name="regex" size={moderateScale(16)} color={colors.icon} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.toolButton}>
-          <Icon name="format-list-bulleted" size={moderateScale(16)} color={COLOR.icon} />
+        <TouchableOpacity style={getStyles(colors).toolButton}>
+          <Icon name="format-list-bulleted" size={moderateScale(16)} color={colors.icon} />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.toolButton}>
-          <Icon name="swap-horizontal" size={moderateScale(16)} color={COLOR.icon} />
+        <TouchableOpacity style={getStyles(colors).toolButton}>
+          <Icon name="swap-horizontal" size={moderateScale(16)} color={colors.icon} />
         </TouchableOpacity>
       </View>
 
       {/* Resultados */}
-      <View style={styles.resultsSection}>
-        <View style={styles.resultsHeader}>
-          <Text style={styles.resultsTitle}>RESULTADOS</Text>
-          <View style={styles.resultsActions}>
-            <TouchableOpacity style={styles.resultActionButton}>
-              <Icon name="minus" size={moderateScale(16)} color={COLOR.textSecondary} />
+      <View style={getStyles(colors).resultsSection}>
+        <View style={getStyles(colors).resultsHeader}>
+          <Text style={getStyles(colors).resultsTitle}>RESULTADOS</Text>
+          <View style={getStyles(colors).resultsActions}>
+            <TouchableOpacity style={getStyles(colors).resultActionButton}>
+              <Icon name="minus" size={moderateScale(16)} color={colors.textSecondary} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.resultActionButton}>
-              <Icon name="refresh" size={moderateScale(16)} color={COLOR.textSecondary} />
+            <TouchableOpacity style={getStyles(colors).resultActionButton}>
+              <Icon name="refresh" size={moderateScale(16)} color={colors.textSecondary} />
             </TouchableOpacity>
-            <TouchableOpacity style={styles.resultActionButton}>
-              <Icon name="close" size={moderateScale(16)} color={COLOR.textSecondary} />
+            <TouchableOpacity style={getStyles(colors).resultActionButton}>
+              <Icon name="close" size={moderateScale(16)} color={colors.textSecondary} />
             </TouchableOpacity>
           </View>
         </View>
 
-        <ScrollView style={styles.resultsList} showsVerticalScrollIndicator={false}>
+        <ScrollView style={getStyles(colors).resultsList} showsVerticalScrollIndicator={false}>
           {isSearching ? (
-            <View style={styles.loadingContainer}>
-              <Text style={styles.loadingText}>Buscando...</Text>
+            <View style={getStyles(colors).loadingContainer}>
+              <Text style={getStyles(colors).loadingText}>Buscando...</Text>
             </View>
           ) : searchText.trim() === '' ? (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>Ingresa texto para buscar</Text>
+            <View style={getStyles(colors).emptyContainer}>
+              <Text style={getStyles(colors).emptyText}>Ingresa texto para buscar</Text>
             </View>
           ) : searchResults.length === 0 ? (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No se encontraron resultados</Text>
+            <View style={getStyles(colors).emptyContainer}>
+              <Text style={getStyles(colors).emptyText}>No se encontraron resultados</Text>
             </View>
           ) : (
             <>
-              <Text style={styles.summaryText}>
+              <Text style={getStyles(colors).summaryText}>
                 {totalMatches} coincidencia{totalMatches !== 1 ? 's' : ''} en {searchResults.length} archivo{searchResults.length !== 1 ? 's' : ''}
               </Text>
               
               {searchResults.map((result) => (
-                <View key={result.fileId} style={styles.resultFile}>
+                <View key={result.fileId} style={getStyles(colors).resultFile}>
                   <TouchableOpacity 
-                    style={styles.resultFileHeader}
+                    style={getStyles(colors).resultFileHeader}
                     onPress={() => handleSelectFile(result.fileId)}
                   >
-                    <Icon name="file-document-outline" size={moderateScale(16)} color={COLOR.primary} />
-                    <Text style={styles.resultFileName}>{result.fileName}</Text>
-                    <Text style={styles.resultFileCount}>({result.matches.length})</Text>
+                    <Icon name="file-document-outline" size={moderateScale(16)} color={colors.primary} />
+                    <Text style={getStyles(colors).resultFileName}>{result.fileName}</Text>
+                    <Text style={getStyles(colors).resultFileCount}>({result.matches.length})</Text>
                   </TouchableOpacity>
                   
                   {result.matches.map((match, index) => (
                     <TouchableOpacity 
                       key={index}
                       style={[
-                        styles.resultLine,
-                        match.lineNumber === 0 && styles.fileNameMatch
+                        getStyles(colors).resultLine,
+                        match.lineNumber === 0 && getStyles(colors).fileNameMatch
                       ]}
                       onPress={() => handleSelectFile(result.fileId)}
                     >
-                      <Text style={styles.resultLineNumber}>
+                      <Text style={getStyles(colors).resultLineNumber}>
                         {match.lineNumber === 0 ? '📄' : match.lineNumber}
                       </Text>
                       {renderHighlightedLine(match.lineContent, match.matchStart, match.matchEnd)}
@@ -297,20 +300,20 @@ export const SidebarSearchView: React.FC<SidebarSearchViewProps> = ({ onClose })
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLOR.background,
+    backgroundColor: colors.background,
   },
   searchContainer: {
     padding: moderateScale(12),
     borderBottomWidth: 1,
-    borderBottomColor: COLOR.border,
+    borderBottomColor: colors.border,
   },
   searchInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLOR.surfaceLight,
+    backgroundColor: colors.surfaceLight,
     borderRadius: moderateScale(8),
     paddingHorizontal: moderateScale(12),
     paddingVertical: verticalScale(8),
@@ -318,7 +321,7 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    color: COLOR.textPrimary,
+    color: colors.textPrimary,
     fontSize: moderateScale(14),
   },
   toolBar: {
@@ -327,13 +330,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: moderateScale(12),
     paddingVertical: verticalScale(8),
     borderBottomWidth: 1,
-    borderBottomColor: COLOR.border,
+    borderBottomColor: colors.border,
     gap: scale(8),
   },
   toolButton: {
     padding: moderateScale(6),
     borderRadius: moderateScale(4),
-    backgroundColor: COLOR.surface,
+    backgroundColor: colors.surface,
   },
   resultsSection: {
     flex: 1,
@@ -344,12 +347,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: moderateScale(12),
     paddingVertical: verticalScale(8),
-    backgroundColor: COLOR.surface,
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: COLOR.border,
+    borderBottomColor: colors.border,
   },
   resultsTitle: {
-    color: COLOR.textSecondary,
+    color: colors.textSecondary,
     fontSize: moderateScale(12),
     fontWeight: 'bold',
     letterSpacing: 0.5,
@@ -373,7 +376,7 @@ const styles = StyleSheet.create({
     paddingVertical: verticalScale(32),
   },
   loadingText: {
-    color: COLOR.textSecondary,
+    color: colors.textSecondary,
     fontSize: moderateScale(14),
   },
   emptyContainer: {
@@ -383,12 +386,12 @@ const styles = StyleSheet.create({
     paddingVertical: verticalScale(32),
   },
   emptyText: {
-    color: COLOR.textSecondary,
+    color: colors.textSecondary,
     fontSize: moderateScale(14),
     textAlign: 'center',
   },
   summaryText: {
-    color: COLOR.textSecondary,
+    color: colors.textSecondary,
     fontSize: moderateScale(12),
     paddingHorizontal: moderateScale(12),
     paddingVertical: verticalScale(8),
@@ -401,17 +404,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: moderateScale(12),
     paddingVertical: verticalScale(6),
-    backgroundColor: COLOR.surface,
+    backgroundColor: colors.surface,
     gap: scale(8),
   },
   resultFileName: {
-    color: COLOR.primary,
+    color: colors.primary,
     fontSize: moderateScale(14),
     fontWeight: '500',
     flex: 1,
   },
   resultFileCount: {
-    color: COLOR.textSecondary,
+    color: colors.textSecondary,
     fontSize: moderateScale(12),
   },
   resultLine: {
@@ -422,10 +425,10 @@ const styles = StyleSheet.create({
     gap: scale(12),
   },
   fileNameMatch: {
-    backgroundColor: COLOR.surfaceLight,
+    backgroundColor: colors.surfaceLight,
   },
   resultLineNumber: {
-    color: COLOR.textSecondary,
+    color: colors.textSecondary,
     fontSize: moderateScale(12),
     minWidth: moderateScale(30),
     textAlign: 'right',
@@ -435,11 +438,11 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(12),
   },
   normalText: {
-    color: COLOR.textPrimary,
+    color: colors.textPrimary,
   },
   highlightedText: {
-    color: COLOR.background,
-    backgroundColor: COLOR.primary,
+    color: colors.background,
+    backgroundColor: colors.primary,
     fontWeight: 'bold',
   },
 });

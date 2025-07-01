@@ -1,16 +1,20 @@
-import { COLOR } from '@/src/constants/colors';
 import { Icon } from '@/src/constants/icons';
+import { getColorsByTheme } from '@/src/constants/themeColors';
+import { useTheme } from '@/src/utils/contexts/ThemeContext';
 import { Tabs } from 'expo-router';
 import React from 'react';
 
-const layout = () => {
+const Layout = () => {
+  const { theme } = useTheme();
+  const COLOR = getColorsByTheme(theme);
+  
   return (
       <Tabs screenOptions={{
           headerShown: false,
           tabBarActiveTintColor: COLOR.primary,
           tabBarInactiveTintColor: COLOR.icon,
           tabBarStyle: {
-            backgroundColor: COLOR.surfaceLight,
+            backgroundColor: COLOR.surface,
             borderTopWidth: 0,
             height: 90,
             paddingBottom: 8,
@@ -50,4 +54,4 @@ const layout = () => {
   );
 };
 
-export default layout;
+export default Layout;

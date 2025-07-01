@@ -1,5 +1,6 @@
-import { COLOR } from '@/src/constants/colors';
 import { Icon } from '@/src/constants/icons';
+import { getColorsByTheme } from '@/src/constants/themeColors';
+import { useTheme } from '@/src/utils/contexts/ThemeContext';
 import React, { useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
@@ -26,6 +27,8 @@ export const ConsolePanel: React.FC<ConsolePanelProps> = ({
   code = '',
   isExecuting = false,
 }) => {
+  const { theme } = useTheme();
+  const COLOR = getColorsByTheme(theme);
   const [messages, setMessages] = useState<ConsoleMessage[]>([]);
   const scrollRef = useRef<ScrollView>(null);
   const messageIdCounter = useRef(0);
@@ -279,6 +282,76 @@ export const ConsolePanel: React.FC<ConsolePanelProps> = ({
     addMessage('Consultas ejecutadas exitosamente', 'system');
   };
 
+  const styles = StyleSheet.create({
+    consoleSection: {
+      flex: 0.4,
+      backgroundColor: COLOR.surfaceDark,
+      borderTopWidth: 1,
+      borderTopColor: COLOR.border,
+      maxHeight: '40%',
+      minHeight: 150,
+    },
+    consoleHeader: {
+      backgroundColor: COLOR.surface,
+      borderBottomWidth: 1,
+      borderBottomColor: COLOR.border,
+      paddingHorizontal: scale(16),
+      paddingVertical: verticalScale(8),
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    consoleTitle: {
+      fontSize: moderateScale(14),
+      fontWeight: '600',
+      color: COLOR.textPrimary,
+    },
+    consoleActions: {
+      flexDirection: 'row',
+      gap: scale(8),
+    },
+    consoleActionButton: {
+      padding: moderateScale(6),
+      backgroundColor: COLOR.surfaceLight,
+      borderRadius: moderateScale(4),
+    },
+    consoleContent: {
+      flex: 1,
+      paddingHorizontal: scale(12),
+    },
+    consoleEmptyMessage: {
+      color: COLOR.textSecondary,
+      fontSize: moderateScale(12),
+      textAlign: 'center',
+      fontStyle: 'italic',
+      paddingVertical: verticalScale(20),
+    },
+    consoleMessage: {
+      paddingVertical: verticalScale(2),
+      marginBottom: verticalScale(4),
+    },
+    consoleMessageText: {
+      fontSize: moderateScale(12),
+      fontFamily: 'monospace',
+      color: COLOR.textPrimary,
+    },
+    consoleErrorText: {
+      color: COLOR.error,
+    },
+    consoleInputText: {
+      color: COLOR.textSecondary,
+    },
+    consoleSystemText: {
+      color: COLOR.primary,
+      fontStyle: 'italic',
+    },
+    consoleTimestamp: {
+      fontSize: moderateScale(10),
+      color: COLOR.textSecondary,
+      marginTop: verticalScale(2),
+    },
+  });
+
   return (
     <View style={styles.consoleSection}>
       <View style={styles.consoleHeader}>
@@ -336,72 +409,3 @@ export const ConsolePanel: React.FC<ConsolePanelProps> = ({
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  consoleSection: {
-    flex: 0.4,
-    backgroundColor: COLOR.surfaceDark,
-    borderTopWidth: 2,
-    borderTopColor: COLOR.border,
-  },
-  consoleHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: moderateScale(16),
-    paddingVertical: verticalScale(8),
-    backgroundColor: COLOR.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: COLOR.border,
-  },
-  consoleTitle: {
-    color: COLOR.textPrimary,
-    fontSize: moderateScale(14),
-    fontWeight: '600',
-  },
-  consoleActions: {
-    flexDirection: 'row',
-    gap: scale(8),
-  },
-  consoleActionButton: {
-    padding: moderateScale(6),
-    borderRadius: moderateScale(4),
-    backgroundColor: COLOR.surfaceLight,
-  },
-  consoleContent: {
-    flex: 1,
-    paddingHorizontal: moderateScale(12),
-  },
-  consoleEmptyMessage: {
-    color: COLOR.textSecondary,
-    fontSize: moderateScale(12),
-    fontStyle: 'italic',
-    textAlign: 'center',
-    marginTop: verticalScale(20),
-  },
-  consoleMessage: {
-    marginBottom: verticalScale(4),
-    paddingVertical: verticalScale(2),
-  },
-  consoleMessageText: {
-    color: COLOR.textPrimary,
-    fontSize: moderateScale(12),
-    fontFamily: 'monospace',
-    lineHeight: moderateScale(16),
-  },
-  consoleErrorText: {
-    color: COLOR.error,
-  },
-  consoleSystemText: {
-    color: COLOR.textSecondary,
-    fontStyle: 'italic',
-  },
-  consoleInputText: {
-    color: COLOR.primary,
-  },
-  consoleTimestamp: {
-    color: COLOR.textSecondary,
-    fontSize: moderateScale(10),
-    marginTop: verticalScale(2),
-  },
-});

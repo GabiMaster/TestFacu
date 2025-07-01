@@ -1,7 +1,8 @@
 import { FileItem } from '@/src/components/molecules/FileItem';
 import { InputModal } from '@/src/components/molecules/InputModal';
-import { COLOR } from '@/src/constants/colors';
+import { getColorsByTheme } from '@/src/constants/themeColors';
 import { FileItem as FileItemType } from '@/src/hooks/sidebar/useSidebar';
+import { useTheme } from '@/src/utils/contexts/ThemeContext';
 import React, { useState } from 'react';
 import {
     ScrollView,
@@ -35,6 +36,9 @@ export const SidebarBody: React.FC<SidebarBodyProps> = ({
   onRenameFile,
   onDeleteFile
 }) => {
+  const { theme } = useTheme();
+  const colors = getColorsByTheme(theme);
+  
   // Removemos el log que se ejecuta en cada render
 
   const [renameModalVisible, setRenameModalVisible] = useState(false);
@@ -107,37 +111,35 @@ export const SidebarBody: React.FC<SidebarBodyProps> = ({
         )}
       </View>
     ));
+  };    return (
+      <>
+        <ScrollView 
+          style={getStyles(colors).body}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={getStyles(colors).contentContainer}
+        >
+          {renderFileTree(files)}
+        </ScrollView>
+
+        <InputModal
+          visible={renameModalVisible}
+          title="Renombrar"
+          message="Ingresa el nuevo nombre:"
+          placeholder="Nuevo nombre"
+          defaultValue={fileToRename?.name || ''}
+          onConfirm={handleRenameConfirm}
+          onCancel={handleRenameCancel}
+        />
+      </>
+    );
   };
 
-  return (
-    <>
-      <ScrollView 
-        style={styles.body}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.contentContainer}
-      >
-        {renderFileTree(files)}
-      </ScrollView>
-
-      <InputModal
-        visible={renameModalVisible}
-        title="Renombrar"
-        message="Ingresa el nuevo nombre:"
-        placeholder="Nuevo nombre"
-        defaultValue={fileToRename?.name || ''}
-        onConfirm={handleRenameConfirm}
-        onCancel={handleRenameCancel}
-      />
-    </>
-  );
-};
-
-const styles = StyleSheet.create({
-  body: {
-    flex: 1,
-    backgroundColor: COLOR.background,
-  },
-  contentContainer: {
-    paddingVertical: verticalScale(8),
-  },
-});
+  const getStyles = (colors: any) => StyleSheet.create({
+    body: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    contentContainer: {
+      paddingVertical: verticalScale(8),
+    },
+  });

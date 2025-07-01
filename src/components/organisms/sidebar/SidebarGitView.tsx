@@ -1,6 +1,7 @@
-import { COLOR } from '@/src/constants/colors';
 import { Icon } from '@/src/constants/icons';
+import { getColorsByTheme } from '@/src/constants/themeColors';
 import { useSidebarContext } from '@/src/utils/contexts/SidebarContext';
+import { useTheme } from '@/src/utils/contexts/ThemeContext';
 import { FileSystemManager } from '@/src/utils/fileSystem/FileSystemManager';
 import React, { useState } from 'react';
 import {
@@ -20,6 +21,8 @@ interface SidebarGitViewProps {
 
 export const SidebarGitView: React.FC<SidebarGitViewProps> = ({ onClose }) => {
   const { updateFiles } = useSidebarContext();
+  const { theme } = useTheme();
+  const colors = getColorsByTheme(theme);
   const [repoUrl, setRepoUrl] = useState('');
   const [isCloning, setIsCloning] = useState(false);
 
@@ -162,36 +165,36 @@ export const SidebarGitView: React.FC<SidebarGitViewProps> = ({ onClose }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={getStyles(colors).container}>
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Control de Versiones</Text>
-        <Text style={styles.headerSubtitle}>Clona un repositorio Git</Text>
+      <View style={getStyles(colors).header}>
+        <Text style={getStyles(colors).headerTitle}>Control de Versiones</Text>
+        <Text style={getStyles(colors).headerSubtitle}>Clona un repositorio Git</Text>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView style={getStyles(colors).content} showsVerticalScrollIndicator={false}>
         {/* Información */}
-        <View style={styles.infoSection}>
-          <View style={styles.infoCard}>
-            <Icon name="information-outline" size={moderateScale(20)} color={COLOR.primary} />
-            <Text style={styles.infoText}>
+        <View style={getStyles(colors).infoSection}>
+          <View style={getStyles(colors).infoCard}>
+            <Icon name="information-outline" size={moderateScale(20)} color={colors.primary} />
+            <Text style={getStyles(colors).infoText}>
               Solo repositorios públicos de GitHub. Se clonarán hasta 20 archivos de código (JS, HTML, CSS, etc.)
             </Text>
           </View>
         </View>
 
         {/* Formulario de clonado */}
-        <View style={styles.formSection}>
-          <Text style={styles.sectionTitle}>URL del Repositorio</Text>
+        <View style={getStyles(colors).formSection}>
+          <Text style={getStyles(colors).sectionTitle}>URL del Repositorio</Text>
           
-          <View style={styles.inputContainer}>
-            <Icon name="link" size={moderateScale(18)} color={COLOR.icon} />
+          <View style={getStyles(colors).inputContainer}>
+            <Icon name="link" size={moderateScale(18)} color={colors.icon} />
             <TextInput
-              style={styles.urlInput}
+              style={getStyles(colors).urlInput}
               value={repoUrl}
               onChangeText={setRepoUrl}
               placeholder="https://github.com/usuario/repositorio.git"
-              placeholderTextColor={COLOR.textSecondary}
+              placeholderTextColor={colors.textSecondary}
               autoCapitalize="none"
               autoCorrect={false}
               keyboardType="url"
@@ -199,71 +202,71 @@ export const SidebarGitView: React.FC<SidebarGitViewProps> = ({ onClose }) => {
             />
             {repoUrl.length > 0 && !isCloning && (
               <TouchableOpacity onPress={handleClearUrl}>
-                <Icon name="close-circle" size={moderateScale(18)} color={COLOR.textSecondary} />
+                <Icon name="close-circle" size={moderateScale(18)} color={colors.textSecondary} />
               </TouchableOpacity>
             )}
           </View>
 
           <TouchableOpacity
             style={[
-              styles.cloneButton,
-              (!repoUrl.trim() || isCloning) && styles.cloneButtonDisabled
+              getStyles(colors).cloneButton,
+              (!repoUrl.trim() || isCloning) && getStyles(colors).cloneButtonDisabled
             ]}
             onPress={handleCloneRepository}
             disabled={!repoUrl.trim() || isCloning}
           >
             {isCloning ? (
               <>
-                <Icon name="loading" size={moderateScale(18)} color={COLOR.background} />
-                <Text style={styles.cloneButtonText}>Clonando...</Text>
+                <Icon name="loading" size={moderateScale(18)} color={colors.background} />
+                <Text style={getStyles(colors).cloneButtonText}>Clonando...</Text>
               </>
             ) : (
               <>
-                <Icon name="download" size={moderateScale(18)} color={COLOR.background} />
-                <Text style={styles.cloneButtonText}>Clonar Repositorio</Text>
+                <Icon name="download" size={moderateScale(18)} color={colors.background} />
+                <Text style={getStyles(colors).cloneButtonText}>Clonar Repositorio</Text>
               </>
             )}
           </TouchableOpacity>
         </View>
 
         {/* Ejemplos */}
-        <View style={styles.examplesSection}>
-          <Text style={styles.sectionTitle}>Repositorios de Ejemplo</Text>
+        <View style={getStyles(colors).examplesSection}>
+          <Text style={getStyles(colors).sectionTitle}>Repositorios de Ejemplo</Text>
           
           <TouchableOpacity 
-            style={styles.exampleItem}
+            style={getStyles(colors).exampleItem}
             onPress={() => setRepoUrl('https://github.com/microsoft/vscode')}
           >
-            <Icon name="github" size={moderateScale(16)} color={COLOR.textSecondary} />
-            <Text style={styles.exampleText}>
+            <Icon name="github" size={moderateScale(16)} color={colors.textSecondary} />
+            <Text style={getStyles(colors).exampleText}>
               https://github.com/microsoft/vscode
             </Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
-            style={styles.exampleItem}
+            style={getStyles(colors).exampleItem}
             onPress={() => setRepoUrl('https://github.com/facebook/react')}
           >
-            <Icon name="github" size={moderateScale(16)} color={COLOR.textSecondary} />
-            <Text style={styles.exampleText}>
+            <Icon name="github" size={moderateScale(16)} color={colors.textSecondary} />
+            <Text style={getStyles(colors).exampleText}>
               https://github.com/facebook/react
             </Text>
           </TouchableOpacity>
           
           <TouchableOpacity 
-            style={styles.exampleItem}
+            style={getStyles(colors).exampleItem}
             onPress={() => setRepoUrl('https://github.com/nodejs/node')}
           >
-            <Icon name="github" size={moderateScale(16)} color={COLOR.textSecondary} />
-            <Text style={styles.exampleText}>
+            <Icon name="github" size={moderateScale(16)} color={colors.textSecondary} />
+            <Text style={getStyles(colors).exampleText}>
               https://github.com/nodejs/node
             </Text>
           </TouchableOpacity>
         </View>
 
         {/* Footer informativo */}
-        <View style={styles.footerInfo}>
-          <Text style={styles.footerText}>
+        <View style={getStyles(colors).footerInfo}>
+          <Text style={getStyles(colors).footerText}>
             Nota: Solo se pueden clonar repositorios públicos. Para repositorios privados necesitarás configurar autenticación.
           </Text>
         </View>
@@ -272,24 +275,24 @@ export const SidebarGitView: React.FC<SidebarGitViewProps> = ({ onClose }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLOR.background,
+    backgroundColor: colors.background,
   },
   header: {
     padding: moderateScale(16),
     borderBottomWidth: 1,
-    borderBottomColor: COLOR.border,
+    borderBottomColor: colors.border,
   },
   headerTitle: {
-    color: COLOR.textPrimary,
+    color: colors.textPrimary,
     fontSize: moderateScale(18),
     fontWeight: 'bold',
     marginBottom: verticalScale(4),
   },
   headerSubtitle: {
-    color: COLOR.textSecondary,
+    color: colors.textSecondary,
     fontSize: moderateScale(14),
   },
   content: {
@@ -301,14 +304,14 @@ const styles = StyleSheet.create({
   infoCard: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    backgroundColor: COLOR.surfaceLight,
+    backgroundColor: colors.surfaceLight,
     padding: moderateScale(12),
     borderRadius: moderateScale(8),
     gap: scale(12),
   },
   infoText: {
     flex: 1,
-    color: COLOR.textPrimary,
+    color: colors.textPrimary,
     fontSize: moderateScale(13),
     lineHeight: moderateScale(18),
   },
@@ -317,7 +320,7 @@ const styles = StyleSheet.create({
     paddingBottom: verticalScale(24),
   },
   sectionTitle: {
-    color: COLOR.textPrimary,
+    color: colors.textPrimary,
     fontSize: moderateScale(14),
     fontWeight: '600',
     marginBottom: verticalScale(12),
@@ -325,34 +328,34 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLOR.surface,
+    backgroundColor: colors.surface,
     borderRadius: moderateScale(8),
     paddingHorizontal: moderateScale(12),
     paddingVertical: verticalScale(10),
     borderWidth: 1,
-    borderColor: COLOR.border,
+    borderColor: colors.border,
     marginBottom: verticalScale(16),
     gap: scale(10),
   },
   urlInput: {
     flex: 1,
-    color: COLOR.textPrimary,
+    color: colors.textPrimary,
     fontSize: moderateScale(14),
   },
   cloneButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: COLOR.primary,
+    backgroundColor: colors.primary,
     borderRadius: moderateScale(8),
     paddingVertical: verticalScale(12),
     gap: scale(8),
   },
   cloneButtonDisabled: {
-    backgroundColor: COLOR.textSecondary,
+    backgroundColor: colors.textSecondary,
   },
   cloneButtonText: {
-    color: COLOR.background,
+    color: colors.background,
     fontSize: moderateScale(14),
     fontWeight: '600',
   },
@@ -368,7 +371,7 @@ const styles = StyleSheet.create({
   },
   exampleText: {
     flex: 1,
-    color: COLOR.textSecondary,
+    color: colors.textSecondary,
     fontSize: moderateScale(12),
     fontFamily: 'monospace',
   },
@@ -377,7 +380,7 @@ const styles = StyleSheet.create({
     paddingBottom: verticalScale(32),
   },
   footerText: {
-    color: COLOR.textSecondary,
+    color: colors.textSecondary,
     fontSize: moderateScale(12),
     lineHeight: moderateScale(16),
     textAlign: 'center',

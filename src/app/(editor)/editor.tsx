@@ -16,13 +16,18 @@ import { useCodeSearch } from '@/src/hooks/editor/useCodeSearch';
 import { useEditorFile } from '@/src/hooks/editor/useEditorFile';
 
 // Utils
-import { COLOR } from '@/src/constants/colors';
+import { getColorsByTheme } from '@/src/constants/themeColors';
 import { useSidebarContext } from '@/src/utils/contexts/SidebarContext';
+import { useTheme } from '@/src/utils/contexts/ThemeContext';
 import { CODE_TEMPLATES, getFileExtension } from '@/src/utils/editor/templates';
 
 const Editor = () => {
   const params = useLocalSearchParams<{ language?: string }>();
   const urlLanguage = params.language;
+  
+  // Contexto del tema
+  const { theme } = useTheme();
+  const COLOR = getColorsByTheme(theme);
   
   // Contexto del sidebar
   const { openSidebar, selectedFile } = useSidebarContext();
@@ -120,6 +125,30 @@ const Editor = () => {
   // Referencia para controlar la inicialización
   const isInitialized = useRef(false);
   const lastLanguage = useRef<string>('');
+
+  // Estilos dinámicos basados en el tema
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: COLOR.background,
+    },
+    body: {
+      flex: 1,
+    },
+    mainContent: {
+      flex: 1,
+      flexDirection: 'column',
+    },
+    loadingContainer: {
+      padding: 20,
+      alignItems: 'center',
+      backgroundColor: COLOR.surface,
+    },
+    loadingText: {
+      color: COLOR.textSecondary,
+      fontSize: 14,
+    },
+  });
 
   // Inicialización con template según el lenguaje
   useEffect(() => {
@@ -454,28 +483,5 @@ console.log("Hello, World!");`);
     </Sidebar>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLOR.background,
-  },
-  body: {
-    flex: 1,
-  },
-  mainContent: {
-    flex: 1,
-    flexDirection: 'column',
-  },
-  loadingContainer: {
-    padding: 20,
-    alignItems: 'center',
-    backgroundColor: COLOR.surface,
-  },
-  loadingText: {
-    color: COLOR.textSecondary,
-    fontSize: 14,
-  },
-});
 
 export default Editor;

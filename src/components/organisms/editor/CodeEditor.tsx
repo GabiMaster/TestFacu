@@ -1,4 +1,5 @@
-import { COLOR } from '@/src/constants/colors';
+import { getColorsByTheme } from '@/src/constants/themeColors';
+import { useTheme } from '@/src/utils/contexts/ThemeContext';
 import React, { forwardRef, useImperativeHandle, useRef } from 'react';
 import { Platform, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { moderateScale, verticalScale } from 'react-native-size-matters';
@@ -26,6 +27,8 @@ export const CodeEditor = forwardRef<CodeEditorRef, CodeEditorProps>(({
   showConsole,
 }, ref) => {
   const textInputRef = useRef<TextInput>(null);
+  const { theme } = useTheme();
+  const COLOR = getColorsByTheme(theme);
 
   useImperativeHandle(ref, () => ({
     focusAndSelect: (newSelection: { start: number; end: number }) => {
@@ -79,6 +82,59 @@ export const CodeEditor = forwardRef<CodeEditorRef, CodeEditorProps>(({
     return lines.map((_, index) => ({ lineNumber: index + 1, uniqueId: `line-${index + 1}` }));
   };
 
+  const styles = StyleSheet.create({
+    editorSection: {
+      flex: 1,
+    },
+    editorWithConsole: {
+      flex: 0.6, // 60% cuando la consola está visible
+    },
+    codeContainer: {
+      flex: 1,
+      backgroundColor: COLOR.background,
+    },
+    codeEditor: {
+      flexDirection: 'row',
+      flex: 1,
+      minHeight: '100%',
+    },
+    lineNumbers: {
+      backgroundColor: COLOR.surfaceLight,
+      paddingHorizontal: moderateScale(8),
+      paddingVertical: verticalScale(12),
+      borderRightWidth: 1,
+      borderRightColor: COLOR.border,
+      minWidth: moderateScale(50),
+      alignItems: 'flex-end',
+    },
+    lineNumber: {
+      color: COLOR.textSecondary,
+      fontSize: moderateScale(12),
+      fontFamily: Platform.select({ 
+        ios: 'Menlo', 
+        android: 'RobotoMono-Regular',
+        default: 'monospace' 
+      }),
+      lineHeight: moderateScale(18),
+      textAlign: 'right',
+    },
+    codeInput: {
+      flex: 1,
+      color: COLOR.textPrimary,
+      fontSize: moderateScale(14),
+      fontFamily: Platform.select({ 
+        ios: 'Menlo', 
+        android: 'RobotoMono-Regular',
+        default: 'monospace' 
+      }),
+      lineHeight: moderateScale(18),
+      paddingHorizontal: moderateScale(12),
+      paddingVertical: verticalScale(12),
+      textAlignVertical: 'top',
+      minHeight: '100%',
+    },
+  });
+
   return (
     <View style={[styles.editorSection, showConsole && styles.editorWithConsole]}>
       <ScrollView
@@ -124,56 +180,3 @@ export const CodeEditor = forwardRef<CodeEditorRef, CodeEditorProps>(({
 });
 
 CodeEditor.displayName = 'CodeEditor';
-
-const styles = StyleSheet.create({
-  editorSection: {
-    flex: 1,
-  },
-  editorWithConsole: {
-    flex: 0.6, // 60% cuando la consola está visible
-  },
-  codeContainer: {
-    flex: 1,
-    backgroundColor: COLOR.background,
-  },
-  codeEditor: {
-    flexDirection: 'row',
-    flex: 1,
-    minHeight: '100%',
-  },
-  lineNumbers: {
-    backgroundColor: COLOR.surfaceLight,
-    paddingHorizontal: moderateScale(8),
-    paddingVertical: verticalScale(12),
-    borderRightWidth: 1,
-    borderRightColor: COLOR.border,
-    minWidth: moderateScale(50),
-    alignItems: 'flex-end',
-  },
-  lineNumber: {
-    color: COLOR.textSecondary,
-    fontSize: moderateScale(12),
-    fontFamily: Platform.select({ 
-      ios: 'Menlo', 
-      android: 'RobotoMono-Regular',
-      default: 'monospace' 
-    }),
-    lineHeight: moderateScale(18),
-    textAlign: 'right',
-  },
-  codeInput: {
-    flex: 1,
-    color: COLOR.textPrimary,
-    fontSize: moderateScale(14),
-    fontFamily: Platform.select({ 
-      ios: 'Menlo', 
-      android: 'RobotoMono-Regular',
-      default: 'monospace' 
-    }),
-    lineHeight: moderateScale(18),
-    paddingHorizontal: moderateScale(12),
-    paddingVertical: verticalScale(12),
-    textAlignVertical: 'top',
-    minHeight: '100%',
-  },
-});

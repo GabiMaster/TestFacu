@@ -1,6 +1,7 @@
 import { SearchInput, SearchInputRef } from '@/src/components/molecules/SearchInput';
-import { COLOR } from '@/src/constants/colors';
 import { Icon } from '@/src/constants/icons';
+import { getColorsByTheme } from '@/src/constants/themeColors';
+import { useTheme } from '@/src/utils/contexts/ThemeContext';
 import React, { forwardRef, useImperativeHandle, useRef } from 'react';
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
@@ -35,6 +36,8 @@ export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(({
   code,
 }, ref) => {
   const searchInputRef = useRef<SearchInputRef>(null);
+  const { theme } = useTheme();
+  const COLOR = getColorsByTheme(theme);
 
   useImperativeHandle(ref, () => ({
     focusSearchInput: () => {
@@ -73,6 +76,44 @@ export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(({
   const handleClearSearch = () => {
     onSearchTextChange('');
   };
+
+  const styles = StyleSheet.create({
+    searchContainer: {
+      backgroundColor: COLOR.surface,
+      paddingHorizontal: scale(16),
+      paddingVertical: verticalScale(8),
+      borderBottomWidth: 1,
+      borderBottomColor: COLOR.border,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: scale(8),
+    },
+    searchActions: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: scale(4),
+    },
+    searchCounter: {
+      fontSize: moderateScale(12),
+      color: COLOR.textSecondary,
+      minWidth: scale(40),
+      textAlign: 'center',
+    },
+    searchCounterActive: {
+      color: COLOR.primary,
+    },
+    searchCounterInactive: {
+      color: COLOR.textSecondary,
+    },
+    searchActionButton: {
+      padding: moderateScale(4),
+      backgroundColor: COLOR.surfaceLight,
+      borderRadius: moderateScale(4),
+    },
+    searchActionButtonDisabled: {
+      opacity: 0.5,
+    },
+  });
 
   return (
     <View style={styles.searchContainer}>
@@ -118,42 +159,3 @@ export const SearchBar = forwardRef<SearchBarRef, SearchBarProps>(({
 });
 
 SearchBar.displayName = 'SearchBar';
-
-const styles = StyleSheet.create({
-  searchContainer: {
-    backgroundColor: COLOR.surface,
-    paddingHorizontal: moderateScale(16),
-    paddingVertical: verticalScale(8),
-    borderBottomWidth: 1,
-    borderBottomColor: COLOR.border,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: scale(8),
-  },
-  searchActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: scale(4),
-  },
-  searchCounter: {
-    color: COLOR.textSecondary,
-    fontSize: moderateScale(12),
-    minWidth: moderateScale(35),
-    textAlign: 'center',
-  },
-  searchCounterActive: {
-    color: COLOR.primary,
-    fontWeight: '600',
-  },
-  searchCounterInactive: {
-    color: COLOR.textSecondary,
-  },
-  searchActionButton: {
-    padding: moderateScale(6),
-    borderRadius: moderateScale(4),
-    backgroundColor: COLOR.surfaceLight,
-  },
-  searchActionButtonDisabled: {
-    opacity: 0.5,
-  },
-});

@@ -1,13 +1,14 @@
-import { COLOR } from '@/src/constants/colors';
 import { Icon } from '@/src/constants/icons';
+import { getColorsByTheme } from '@/src/constants/themeColors';
 import { FileItem } from '@/src/hooks/sidebar/useSidebar';
 import { useSidebarContext } from '@/src/utils/contexts/SidebarContext';
+import { useTheme } from '@/src/utils/contexts/ThemeContext';
 import React from 'react';
 import {
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
 
@@ -35,6 +36,8 @@ export const SidebarHeader: React.FC<SidebarHeaderProps> = ({
   onClearCurrentFolder
 }) => {
   const { currentView, changeView } = useSidebarContext();
+  const { theme } = useTheme();
+  const colors = getColorsByTheme(theme);
 
   const handleHomePress = () => {
     changeView('home');
@@ -55,60 +58,60 @@ export const SidebarHeader: React.FC<SidebarHeaderProps> = ({
   return (
     <View>
       {/* Fila de navegación superior */}
-      <View style={styles.navigationRow}>
+      <View style={getStyles(colors).navigationRow}>
         <TouchableOpacity 
-          style={[styles.navButton, currentView === 'home' && styles.navButtonActive]}
+          style={[getStyles(colors).navButton, currentView === 'home' && getStyles(colors).navButtonActive]}
           onPress={handleHomePress}
         >
-          <Icon name="home-outline" size={moderateScale(22)} color={currentView === 'home' ? COLOR.primary : COLOR.icon} />
+          <Icon name="home-outline" size={moderateScale(22)} color={currentView === 'home' ? colors.primary : colors.icon} />
         </TouchableOpacity>
         
         <TouchableOpacity 
-          style={[styles.navButton, currentView === 'files' && styles.navButtonActive]}
+          style={[getStyles(colors).navButton, currentView === 'files' && getStyles(colors).navButtonActive]}
           onPress={handleFolderPress}
         >
-          <Icon name="folder-outline" size={moderateScale(22)} color={currentView === 'files' ? COLOR.primary : COLOR.icon} />
+          <Icon name="folder-outline" size={moderateScale(22)} color={currentView === 'files' ? colors.primary : colors.icon} />
         </TouchableOpacity>
         
         <TouchableOpacity 
-          style={[styles.navButton, currentView === 'search' && styles.navButtonActive]}
+          style={[getStyles(colors).navButton, currentView === 'search' && getStyles(colors).navButtonActive]}
           onPress={handleSearchPress}
         >
-          <Icon name="file-search-outline" size={moderateScale(22)} color={currentView === 'search' ? COLOR.primary : COLOR.icon} />
+          <Icon name="file-search-outline" size={moderateScale(22)} color={currentView === 'search' ? colors.primary : colors.icon} />
         </TouchableOpacity>
         
         <TouchableOpacity 
-          style={[styles.navButton, currentView === 'git' && styles.navButtonActive]}
+          style={[getStyles(colors).navButton, currentView === 'git' && getStyles(colors).navButtonActive]}
           onPress={handleGitPress}
         >
-          <Icon name="source-branch" size={moderateScale(22)} color={currentView === 'git' ? COLOR.primary : COLOR.icon} />
+          <Icon name="source-branch" size={moderateScale(22)} color={currentView === 'git' ? colors.primary : colors.icon} />
         </TouchableOpacity>
       </View>
 
       {/* Header de archivos - solo mostrar en vista de archivos */}
       {currentView === 'files' && (
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <Text style={styles.headerTitle}>ARCHIVOS</Text>
+        <View style={getStyles(colors).header}>
+          <View style={getStyles(colors).headerLeft}>
+            <Text style={getStyles(colors).headerTitle}>ARCHIVOS</Text>
             {currentFolder && (
               <TouchableOpacity 
-                style={styles.currentFolderBadge}
+                style={getStyles(colors).currentFolderBadge}
                 onPress={onClearCurrentFolder}
                 activeOpacity={0.7}
               >
-                <Text style={styles.headerSubtitle}>
+                <Text style={getStyles(colors).headerSubtitle}>
                   📁 {currentFolder.name}
                 </Text>
-                <Icon name="close-circle" size={moderateScale(14)} color={COLOR.primary} />
+                <Icon name="close-circle" size={moderateScale(14)} color={colors.primary} />
               </TouchableOpacity>
             )}
           </View>
           
-          <View style={styles.headerRight}>
+          <View style={getStyles(colors).headerRight}>
             <TouchableOpacity 
               style={[
-                styles.headerButton,
-                !hasClipboardContent && styles.headerButtonDisabled
+                getStyles(colors).headerButton,
+                !hasClipboardContent && getStyles(colors).headerButtonDisabled
               ]}
               onPress={hasClipboardContent ? onPaste : undefined}
               disabled={!hasClipboardContent}
@@ -117,32 +120,32 @@ export const SidebarHeader: React.FC<SidebarHeaderProps> = ({
               <Icon 
                 name="content-paste" 
                 size={moderateScale(18)} 
-                color={hasClipboardContent ? COLOR.icon : COLOR.textSecondary} 
+                color={hasClipboardContent ? colors.icon : colors.textSecondary} 
               />
             </TouchableOpacity>
             
             <TouchableOpacity 
-              style={styles.headerButton}
+              style={getStyles(colors).headerButton}
               onPress={onNewFile}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              <Icon name="file-plus-outline" size={moderateScale(18)} color={COLOR.icon} />
+              <Icon name="file-plus-outline" size={moderateScale(18)} color={colors.icon} />
             </TouchableOpacity>
             
             <TouchableOpacity 
-              style={styles.headerButton}
+              style={getStyles(colors).headerButton}
               onPress={onNewFolder}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              <Icon name="folder-plus-outline" size={moderateScale(18)} color={COLOR.icon} />
+              <Icon name="folder-plus-outline" size={moderateScale(18)} color={colors.icon} />
             </TouchableOpacity>
             
             <TouchableOpacity 
-              style={styles.headerButton}
+              style={getStyles(colors).headerButton}
               onPress={onImport}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              <Icon name="import" size={moderateScale(18)} color={COLOR.icon} />
+              <Icon name="import" size={moderateScale(18)} color={colors.icon} />
             </TouchableOpacity>
           </View>
         </View>
@@ -150,9 +153,9 @@ export const SidebarHeader: React.FC<SidebarHeaderProps> = ({
 
       {/* Header para otras vistas */}
       {currentView !== 'files' && (
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <Text style={styles.headerTitle}>
+        <View style={getStyles(colors).header}>
+          <View style={getStyles(colors).headerLeft}>
+            <Text style={getStyles(colors).headerTitle}>
               {currentView === 'home' && 'HOME'}
               {currentView === 'search' && 'BÚSQUEDA'}
               {currentView === 'git' && 'GIT'}
@@ -160,13 +163,13 @@ export const SidebarHeader: React.FC<SidebarHeaderProps> = ({
             </Text>
           </View>
           
-          <View style={styles.headerRight}>
+          <View style={getStyles(colors).headerRight}>
             <TouchableOpacity 
-              style={styles.headerButton}
+              style={getStyles(colors).headerButton}
               onPress={onClose}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              <Icon name="close" size={moderateScale(18)} color={COLOR.icon} />
+              <Icon name="close" size={moderateScale(18)} color={colors.icon} />
             </TouchableOpacity>
           </View>
         </View>
@@ -175,7 +178,7 @@ export const SidebarHeader: React.FC<SidebarHeaderProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   navigationRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -183,9 +186,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: moderateScale(8),
     paddingVertical: verticalScale(12),
     paddingTop: verticalScale(36),
-    backgroundColor: COLOR.background,
+    backgroundColor: colors.background,
     borderBottomWidth: 1,
-    borderBottomColor: COLOR.border,
+    borderBottomColor: colors.border,
   },
   navButton: {
     alignItems: 'center',
@@ -196,9 +199,9 @@ const styles = StyleSheet.create({
     minWidth: moderateScale(40),
   },
   navButtonActive: {
-    backgroundColor: COLOR.surface,
+    backgroundColor: colors.surface,
     borderBottomWidth: 2,
-    borderBottomColor: COLOR.primary,
+    borderBottomColor: colors.primary,
   },
   header: {
     flexDirection: 'row',
@@ -206,21 +209,21 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: moderateScale(16),
     paddingVertical: verticalScale(12),
-    backgroundColor: COLOR.surface,
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: COLOR.border,
+    borderBottomColor: colors.border,
   },
   headerLeft: {
     flex: 1,
   },
   headerTitle: {
-    color: COLOR.textSecondary,
+    color: colors.textSecondary,
     fontSize: moderateScale(12),
     fontWeight: 'bold',
     letterSpacing: 0.5,
   },
   headerSubtitle: {
-    color: COLOR.primary,
+    color: colors.primary,
     fontSize: moderateScale(10),
     fontWeight: '500',
     marginTop: verticalScale(2),
@@ -228,7 +231,7 @@ const styles = StyleSheet.create({
   currentFolderBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: COLOR.primary + '15',
+    backgroundColor: colors.primary + '15',
     paddingHorizontal: moderateScale(8),
     paddingVertical: verticalScale(4),
     borderRadius: moderateScale(6),

@@ -1,5 +1,6 @@
-import { COLOR } from '@/src/constants/colors';
 import { Icon } from '@/src/constants/icons';
+import { getColorsByTheme } from '@/src/constants/themeColors';
+import { useTheme } from '@/src/utils/contexts/ThemeContext';
 import React from 'react';
 import {
   StyleSheet,
@@ -20,36 +21,39 @@ export const SidebarFooter: React.FC<SidebarFooterProps> = ({
   onSettings,
   onHelp
 }) => {
+  const { theme } = useTheme();
+  const colors = getColorsByTheme(theme);
+
   return (
-    <View style={styles.footer}>
-      <View style={styles.footerInfo}>
-        <Text style={styles.fileCount}>
+    <View style={getStyles(colors).footer}>
+      <View style={getStyles(colors).footerInfo}>
+        <Text style={getStyles(colors).fileCount}>
           {fileCount} archivo{fileCount !== 1 ? 's' : ''}
         </Text>
       </View>
       
-      <View style={styles.footerActions}>
+      <View style={getStyles(colors).footerActions}>
         <TouchableOpacity 
-          style={styles.footerButton}
+          style={getStyles(colors).footerButton}
           onPress={onSettings}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <Icon name="cog-outline" size={moderateScale(16)} color={COLOR.textSecondary} />
+          <Icon name="cog-outline" size={moderateScale(16)} color={colors.textSecondary} />
         </TouchableOpacity>
         
         <TouchableOpacity 
-          style={styles.footerButton}
+          style={getStyles(colors).footerButton}
           onPress={onHelp}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <Icon name="help-circle-outline" size={moderateScale(16)} color={COLOR.textSecondary} />
+          <Icon name="help-circle-outline" size={moderateScale(16)} color={colors.textSecondary} />
         </TouchableOpacity>
       </View>
     </View>
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -57,16 +61,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: moderateScale(16),
     paddingVertical: verticalScale(8),
     paddingBottom: verticalScale(16),
-    backgroundColor: COLOR.surface,
+    backgroundColor: colors.surface,
     borderTopWidth: 1,
-    borderTopColor: COLOR.border,
+    borderTopColor: colors.border,
     minHeight: moderateScale(36),
   },
   footerInfo: {
     flex: 1,
   },
   fileCount: {
-    color: COLOR.textSecondary,
+    color: colors.textSecondary,
     fontSize: moderateScale(11),
     fontWeight: '400',
   },

@@ -1,4 +1,5 @@
-import { COLOR } from '@/src/constants/colors';
+import { getColorsByTheme } from '@/src/constants/themeColors';
+import { useTheme } from '@/src/utils/contexts/ThemeContext';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import {
@@ -15,6 +16,8 @@ interface SidebarHomeViewProps {
 
 export const SidebarHomeView: React.FC<SidebarHomeViewProps> = ({ onClose }) => {
   const router = useRouter();
+  const { theme } = useTheme();
+  const colors = getColorsByTheme(theme);
 
   const handleGoToHome = () => {
     onClose(); // Cerrar sidebar
@@ -22,36 +25,36 @@ export const SidebarHomeView: React.FC<SidebarHomeViewProps> = ({ onClose }) => 
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.message}>REDIRECCIONA AL HOME</Text>
+    <View style={getStyles(colors).container}>
+      <Text style={getStyles(colors).message}>REDIRECCIONA AL HOME</Text>
       
       <TouchableOpacity 
-        style={styles.homeButton}
+        style={getStyles(colors).homeButton}
         onPress={handleGoToHome}
       >
-        <Text style={styles.homeButtonText}>Ir al home</Text>
+        <Text style={getStyles(colors).homeButtonText}>Ir al home</Text>
       </TouchableOpacity>
     </View>
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: moderateScale(24),
-    backgroundColor: COLOR.background,
+    backgroundColor: colors.background,
   },
   message: {
-    color: COLOR.textPrimary,
+    color: colors.textPrimary,
     fontSize: moderateScale(16),
     fontWeight: '500',
     textAlign: 'center',
     marginBottom: verticalScale(32),
   },
   homeButton: {
-    backgroundColor: COLOR.primary,
+    backgroundColor: colors.primary,
     paddingHorizontal: moderateScale(32),
     paddingVertical: verticalScale(12),
     borderRadius: moderateScale(8),
@@ -62,7 +65,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   homeButtonText: {
-    color: COLOR.textPrimary,
+    color: colors.textPrimary,
     fontSize: moderateScale(16),
     fontWeight: 'bold',
     textAlign: 'center',
