@@ -11,7 +11,7 @@ import { useTheme } from '../../utils/contexts/ThemeContext';
 
 const Home = () => {
   const { user } = useAuth();
-  const { importFile, updateFiles } = useSidebarContext();
+  const { importFile, updateFiles, openSidebar, changeView } = useSidebarContext();
   const { recentProjects, openProject, refreshRecentProjects } = useProjectContext();
   const { theme } = useTheme();
   const COLOR = getColorsByTheme(theme);
@@ -34,16 +34,11 @@ const Home = () => {
     }
   };
 
-  // Función para importar carpeta (simulada - en móvil no es posible importar carpetas completas)
-  const handleImportFolder = () => {
-    Alert.alert(
-      '📁 Importar Carpeta',
-      'En dispositivos móviles no es posible importar carpetas completas. ¿Te gustaría importar archivos individuales?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Importar Archivos', onPress: handleImportFile }
-      ]
-    );
+  // Función para clonar repositorio Git
+  const handleCloneRepository = () => {
+    // Abrir sidebar y cambiar a la vista de Git
+    openSidebar();
+    changeView('git');
   };
 
   // Función para abrir un proyecto reciente
@@ -153,14 +148,10 @@ const Home = () => {
             <Icon name="file-open" type='materialIcons' size={moderateScale(32)} color={COLOR.primary} />
             <Text style={getStyles(COLOR).quickActionText}>Abrir Archivo...</Text>
           </TouchableOpacity>
-          <TouchableOpacity
+          <TouchableOpacity 
             style={getStyles(COLOR).quickAction}
-            onPress={handleImportFolder}
+            onPress={handleCloneRepository}
           >
-            <Icon name="folderopen" type='ant' size={moderateScale(32)} color={COLOR.primary} />
-            <Text style={getStyles(COLOR).quickActionText}>Abrir Carpeta...</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={getStyles(COLOR).quickAction}>
             <Icon name="source-branch" size={moderateScale(32)} color={COLOR.primary} />
             <Text style={getStyles(COLOR).quickActionText}>Clonar Repositorio Git...</Text>
           </TouchableOpacity>

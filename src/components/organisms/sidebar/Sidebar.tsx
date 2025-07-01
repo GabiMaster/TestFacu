@@ -15,6 +15,7 @@ import {
 import { moderateScale } from 'react-native-size-matters';
 import { SidebarBody } from './SidebarBody';
 import { SidebarFooter } from './SidebarFooter';
+import { SidebarGitView } from './SidebarGitView';
 import { SidebarHeader } from './SidebarHeader';
 import { SidebarHomeView } from './SidebarHomeView';
 import { SidebarSearchView } from './SidebarSearchView';
@@ -208,12 +209,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
         return <SidebarSearchView onClose={closeSidebar} />;
       
       case 'git':
-        return (
-          <View style={styles.placeholderView}>
-            <Text style={styles.placeholderText}>Control de Versiones</Text>
-            <Text style={styles.placeholderSubtext}>Funcionalidad en desarrollo</Text>
-          </View>
-        );
+        return <SidebarGitView onClose={closeSidebar} />;
       
       case 'user':
         return (
