@@ -38,7 +38,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
     setCurrentFolder,
     toggleFolder,
     createNewFile,
-    createNewFolder
+    createNewFolder,
+    copyFile,
+    cutFile,
+    renameFileOrFolder,
+    deleteFileOrFolder
   } = useSidebarContext();
 
   const slideAnim = useRef(new Animated.Value(-SIDEBAR_WIDTH)).current;
@@ -158,6 +162,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
               onSelectFile={selectFile}
               onToggleFolder={toggleFolder}
               onSetCurrentFolder={setCurrentFolder}
+              onCopyFile={copyFile}
+              onCutFile={cutFile}
+              onRenameFile={renameFileOrFolder}
+              onDeleteFile={deleteFileOrFolder}
             />
             <SidebarFooter
               fileCount={getTotalFileCount()}
@@ -196,6 +204,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
             onSelectFile={selectFile}
             onToggleFolder={toggleFolder}
             onSetCurrentFolder={setCurrentFolder}
+            onCopyFile={copyFile}
+            onCutFile={cutFile}
+            onRenameFile={renameFileOrFolder}
+            onDeleteFile={deleteFileOrFolder}
           />
         );
     }

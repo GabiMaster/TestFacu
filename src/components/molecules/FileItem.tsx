@@ -1,9 +1,10 @@
 import { FileIcon } from '@/src/components/atoms/FileIcon';
+import { FileContextMenu } from '@/src/components/molecules/FileContextMenu';
 import { COLOR } from '@/src/constants/colors';
 import { Icon } from '@/src/constants/icons';
 import { FileItem as FileItemType } from '@/src/hooks/sidebar/useSidebar';
 import { router } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import {
     Alert,
     StyleSheet,
@@ -22,6 +23,10 @@ interface FileItemProps {
   onToggleFolder?: (folderId: string) => void;
   onSetCurrentFolder?: (folder: FileItemType | null) => void;
   onShowOptions?: (file: FileItemType) => void;
+  onCopy?: (file: FileItemType) => void;
+  onCut?: (file: FileItemType) => void;
+  onRename?: (file: FileItemType) => void;
+  onDelete?: (file: FileItemType) => void;
 }
 
 export const FileItem: React.FC<FileItemProps> = ({
@@ -32,8 +37,14 @@ export const FileItem: React.FC<FileItemProps> = ({
   onSelect,
   onToggleFolder,
   onSetCurrentFolder,
-  onShowOptions
+  onShowOptions,
+  onCopy,
+  onCut,
+  onRename,
+  onDelete,
 }) => {
+  const [showContextMenuModal, setShowContextMenuModal] = useState(false);
+
   const handlePress = () => {
     if (file.type === 'folder' && onToggleFolder) {
       onToggleFolder(file.id);
@@ -75,24 +86,40 @@ export const FileItem: React.FC<FileItemProps> = ({
     }
   };
 
-  const showContextMenu = () => {
-    const options = file.type === 'folder' 
-      ? ['Nuevo archivo', 'Nueva carpeta', 'Renombrar', 'Eliminar', 'Cancelar']
-      : ['Copiar', 'Renombrar', 'Eliminar', 'Exportar', 'Cancelar'];
+  const handleShowContextMenu = () => {
+    setShowContextMenuModal(true);
+  };
 
-    Alert.alert(
-      file.name,
-      'Selecciona una opción:',
-      options.map(option => ({
-        text: option,
-        style: option === 'Cancelar' ? 'cancel' : 'default',
-        onPress: () => {
-          if (option !== 'Cancelar') {
-            console.log(`${option} - ${file.name}`);
-          }
-        }
-      }))
-    );
+  const handleCloseContextMenu = () => {
+    setShowContextMenuModal(false);
+  };
+
+  const handleCopy = (fileItem: FileItemType) => {
+    console.log('📋 Copy action for:', fileItem.name);
+    if (onCopy) {
+      onCopy(fileItem);
+    }
+  };
+
+  const handleCut = (fileItem: FileItemType) => {
+    console.log('✂️ Cut action for:', fileItem.name);
+    if (onCut) {
+      onCut(fileItem);
+    }
+  };
+
+  const handleRename = (fileItem: FileItemType) => {
+    console.log('✏️ Rename action for:', fileItem.name);
+    if (onRename) {
+      onRename(fileItem);
+    }
+  };
+
+  const handleDelete = (fileItem: FileItemType) => {
+    console.log('🗑️ Delete action for:', fileItem.name);
+    if (onDelete) {
+      onDelete(fileItem);
+    }
   };
 
   return (
@@ -135,7 +162,7 @@ export const FileItem: React.FC<FileItemProps> = ({
       
       <TouchableOpacity 
         style={styles.optionsButton}
-        onPress={showContextMenu}
+        onPress={handleShowContextMenu}
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
       >
         <Icon 
@@ -144,6 +171,16 @@ export const FileItem: React.FC<FileItemProps> = ({
           color={COLOR.textSecondary} 
         />
       </TouchableOpacity>
+
+      <FileContextMenu
+        visible={showContextMenuModal}
+        file={file}
+        onClose={handleCloseContextMenu}
+        onCopy={handleCopy}
+        onCut={handleCut}
+        onRename={handleRename}
+        onDelete={handleDelete}
+      />
     </TouchableOpacity>
   );
 };

@@ -20,6 +20,11 @@ interface SidebarContextType {
   renameFile: (fileId: string, newName: string) => void;
   importFile: () => Promise<void>;
   exportFile: (fileId: string, fileName: string) => Promise<void>;
+  // Nuevas funciones de menú contextual
+  copyFile: (file: FileItem) => void;
+  cutFile: (file: FileItem) => void;
+  renameFileOrFolder: (file: FileItem, newName: string) => Promise<void>;
+  deleteFileOrFolder: (file: FileItem) => Promise<void>;
 }
 
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined);

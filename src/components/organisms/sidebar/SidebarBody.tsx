@@ -1,7 +1,8 @@
 import { FileItem } from '@/src/components/molecules/FileItem';
+import { InputModal } from '@/src/components/molecules/InputModal';
 import { COLOR } from '@/src/constants/colors';
 import { FileItem as FileItemType } from '@/src/hooks/sidebar/useSidebar';
-import React from 'react';
+import React, { useState } from 'react';
 import {
     ScrollView,
     StyleSheet,
@@ -16,6 +17,10 @@ interface SidebarBodyProps {
   onSelectFile: (file: FileItemType) => void;
   onToggleFolder: (folderId: string) => void;
   onSetCurrentFolder: (folder: FileItemType | null) => void;
+  onCopyFile: (file: FileItemType) => void;
+  onCutFile: (file: FileItemType) => void;
+  onRenameFile: (file: FileItemType, newName: string) => Promise<void>;
+  onDeleteFile: (file: FileItemType) => Promise<void>;
 }
 
 export const SidebarBody: React.FC<SidebarBodyProps> = ({
@@ -24,9 +29,58 @@ export const SidebarBody: React.FC<SidebarBodyProps> = ({
   currentFolder,
   onSelectFile,
   onToggleFolder,
-  onSetCurrentFolder
+  onSetCurrentFolder,
+  onCopyFile,
+  onCutFile,
+  onRenameFile,
+  onDeleteFile
 }) => {
   console.log('🔧 SidebarBody: Received onSetCurrentFolder:', typeof onSetCurrentFolder);
+
+  const [renameModalVisible, setRenameModalVisible] = useState(false);
+  const [fileToRename, setFileToRename] = useState<FileItemType | null>(null);
+
+  const handleCopy = (file: FileItemType) => {
+    console.log('📋 SidebarBody: Copy file:', file.name);
+    onCopyFile(file);
+  };
+
+  const handleCut = (file: FileItemType) => {
+    console.log('✂️ SidebarBody: Cut file:', file.name);
+    onCutFile(file);
+  };
+
+  const handleRename = (file: FileItemType) => {
+    console.log('✏️ SidebarBody: Rename file:', file.name);
+    setFileToRename(file);
+    setRenameModalVisible(true);
+  };
+
+  const handleDelete = async (file: FileItemType) => {
+    console.log('🗑️ SidebarBody: Delete file:', file.name);
+    try {
+      await onDeleteFile(file);
+    } catch (error) {
+      console.error('❌ Error deleting file:', error);
+    }
+  };
+
+  const handleRenameConfirm = async (newName: string) => {
+    if (fileToRename && newName.trim()) {
+      try {
+        await onRenameFile(fileToRename, newName.trim());
+        setRenameModalVisible(false);
+        setFileToRename(null);
+      } catch (error) {
+        console.error('❌ Error renaming file:', error);
+      }
+    }
+  };
+
+  const handleRenameCancel = () => {
+    setRenameModalVisible(false);
+    setFileToRename(null);
+  };
 
   const renderFileTree = (items: FileItemType[], depth = 0): React.ReactNode => {
     return items.map(file => (
@@ -39,6 +93,10 @@ export const SidebarBody: React.FC<SidebarBodyProps> = ({
           onSelect={onSelectFile}
           onToggleFolder={onToggleFolder}
           onSetCurrentFolder={onSetCurrentFolder}
+          onCopy={handleCopy}
+          onCut={handleCut}
+          onRename={handleRename}
+          onDelete={handleDelete}
         />
         
         {/* Renderizar hijos si es una carpeta abierta */}
@@ -52,13 +110,25 @@ export const SidebarBody: React.FC<SidebarBodyProps> = ({
   };
 
   return (
-    <ScrollView 
-      style={styles.body}
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={styles.contentContainer}
-    >
-      {renderFileTree(files)}
-    </ScrollView>
+    <>
+      <ScrollView 
+        style={styles.body}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.contentContainer}
+      >
+        {renderFileTree(files)}
+      </ScrollView>
+
+      <InputModal
+        visible={renameModalVisible}
+        title="Renombrar"
+        message="Ingresa el nuevo nombre:"
+        placeholder="Nuevo nombre"
+        defaultValue={fileToRename?.name || ''}
+        onConfirm={handleRenameConfirm}
+        onCancel={handleRenameCancel}
+      />
+    </>
   );
 };
 

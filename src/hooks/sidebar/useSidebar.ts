@@ -300,6 +300,57 @@ export const useSidebar = () => {
     }
   }, []);
 
+  // ==================== CONTEXT MENU OPERATIONS ====================
+
+  const copyFile = useCallback((file: FileItem) => {
+    console.log('📋 Copying file:', file.name);
+    FileSystemManager.copyToClipboard(file);
+  }, []);
+
+  const cutFile = useCallback((file: FileItem) => {
+    console.log('✂️ Cutting file:', file.name);
+    FileSystemManager.cutToClipboard(file);
+  }, []);
+
+  const renameFileOrFolder = useCallback(async (file: FileItem, newName: string) => {
+    try {
+      console.log('✏️ Renaming file/folder:', file.name, 'to:', newName);
+      const updatedFiles = await FileSystemManager.renameFileOrFolder(files, file.id, newName);
+      setFiles(updatedFiles);
+      
+      // Si es el archivo seleccionado, actualizarlo
+      if (selectedFile?.id === file.id) {
+        setSelectedFile({ ...file, name: newName });
+      }
+    } catch (error) {
+      console.error('❌ Error renaming file/folder:', error);
+      throw error;
+    }
+  }, [files, selectedFile]);
+
+  const deleteFileOrFolder = useCallback(async (file: FileItem) => {
+    try {
+      console.log('🗑️ Deleting file/folder:', file.name);
+      const updatedFiles = await FileSystemManager.deleteFileOrFolder(files, file.id);
+      setFiles(updatedFiles);
+      
+      // Si es el archivo seleccionado, quitarlo
+      if (selectedFile?.id === file.id) {
+        setSelectedFile(null);
+      }
+      
+      // Si es la carpeta actual, quitarla
+      if (currentFolder?.id === file.id) {
+        setCurrentFolder(null);
+      }
+    } catch (error) {
+      console.error('❌ Error deleting file/folder:', error);
+      throw error;
+    }
+  }, [files, selectedFile, currentFolder]);
+
+  // ==================== EXISTING OPERATIONS ====================
+
   return {
     isOpen,
     currentView,
@@ -320,5 +371,9 @@ export const useSidebar = () => {
     importFile,
     exportFile,
     loadFileStructure,
+    copyFile,
+    cutFile,
+    renameFileOrFolder,
+    deleteFileOrFolder,
   };
 };

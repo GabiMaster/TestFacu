@@ -49,6 +49,11 @@ const Settings = () => {
             <Text style={styles.itemText}>Demo Sistema de Archivos</Text>
             <Text style={styles.languageLabel}>NUEVO</Text>
           </TouchableOpacity>
+          <TouchableOpacity style={styles.itemRow} onPress={() => router.push('/(settings)/context_menu_demo')}>
+            <Icon name="dots-horizontal" size={22} color={COLOR.icon} />
+            <Text style={styles.itemText}>Demo Menú Contextual</Text>
+            <Text style={styles.languageLabel}>NUEVO</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Seguridad Section */}

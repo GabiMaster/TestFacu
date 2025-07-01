@@ -328,4 +328,126 @@ export class FileSystemManager {
       console.error('Error cleaning up orphaned files:', error);
     }
   }
+
+  // ==================== CLIPBOARD OPERATIONS ====================
+  
+  private static clipboard: { file: FileItem; operation: 'copy' | 'cut' } | null = null;
+
+  /**
+   * Copia un archivo/carpeta al portapapeles
+   */
+  static copyToClipboard(file: FileItem): void {
+    console.log('📋 Copying to clipboard:', file.name);
+    this.clipboard = { file: { ...file }, operation: 'copy' };
+  }
+
+  /**
+   * Corta un archivo/carpeta al portapapeles
+   */
+  static cutToClipboard(file: FileItem): void {
+    console.log('✂️ Cutting to clipboard:', file.name);
+    this.clipboard = { file: { ...file }, operation: 'cut' };
+  }
+
+  /**
+   * Obtiene el elemento del portapapeles
+   */
+  static getClipboardItem(): { file: FileItem; operation: 'copy' | 'cut' } | null {
+    return this.clipboard;
+  }
+
+  /**
+   * Limpia el portapapeles
+   */
+  static clearClipboard(): void {
+    this.clipboard = null;
+  }
+
+  /**
+   * Renombra un archivo o carpeta
+   */
+  static async renameFileOrFolder(
+    files: FileItem[], 
+    targetId: string, 
+    newName: string
+  ): Promise<FileItem[]> {
+    try {
+      console.log('✏️ Renaming file/folder:', targetId, 'to:', newName);
+      
+      const renameInTree = (items: FileItem[]): FileItem[] => {
+        return items.map(item => {
+          if (item.id === targetId) {
+            // Actualizar el nombre y la extensión si es archivo
+            const updatedItem = { ...item, name: newName };
+            if (item.type === 'file') {
+              const lastDot = newName.lastIndexOf('.');
+              updatedItem.extension = lastDot > 0 ? newName.substring(lastDot + 1) : '';
+            }
+            console.log('✅ Item renamed:', updatedItem);
+            return updatedItem;
+          }
+          
+          if (item.children) {
+            return { ...item, children: renameInTree(item.children) };
+          }
+          
+          return item;
+        });
+      };
+
+      const updatedFiles = renameInTree(files);
+      await this.saveFileStructure(updatedFiles);
+      
+      console.log('✅ File/folder renamed successfully');
+      return updatedFiles;
+    } catch (error) {
+      console.error('❌ Error renaming file/folder:', error);
+      throw new Error(`No se pudo renombrar el elemento: ${error}`);
+    }
+  }
+
+  /**
+   * Elimina un archivo o carpeta del árbol
+   */
+  static async deleteFileOrFolder(
+    files: FileItem[], 
+    targetId: string
+  ): Promise<FileItem[]> {
+    try {
+      console.log('🗑️ Deleting file/folder:', targetId);
+      
+      const deleteFromTree = (items: FileItem[]): FileItem[] => {
+        return items.filter(item => {
+          if (item.id === targetId) {
+            console.log('✅ Item deleted:', item.name);
+            // Si es un archivo, también eliminar su contenido
+            if (item.type === 'file') {
+              this.deleteFile(item.id).catch(err => 
+                console.warn('⚠️ Could not delete file content:', err)
+              );
+            }
+            return false; // Excluir del array
+          }
+          
+          if (item.children) {
+            item.children = deleteFromTree(item.children);
+          }
+          
+          return true; // Mantener en el array
+        });
+      };
+
+      const updatedFiles = deleteFromTree(files);
+      await this.saveFileStructure(updatedFiles);
+      
+      console.log('✅ File/folder deleted successfully');
+      return updatedFiles;
+    } catch (error) {
+      console.error('❌ Error deleting file/folder:', error);
+      throw new Error(`No se pudo eliminar el elemento: ${error}`);
+    }
+  }
+
+  // ==================== EXISTING OPERATIONS ====================
+
 }
