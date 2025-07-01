@@ -38,14 +38,7 @@ const layout = () => {
                   title: 'Proyectos',
                   tabBarIcon: ({ color, size}) => <Icon name="folder-outline" color={color} size={size} />
               }}
-          />
-          <Tabs.Screen
-              name="languages"
-              options={{
-                  title: 'Lenguajes',
-                  tabBarIcon: ({ color, size}) => <Icon name="file-code-outline" color={color} size={size} />
-              }}
-          />
+            />
           <Tabs.Screen
               name="settings"
               options={{

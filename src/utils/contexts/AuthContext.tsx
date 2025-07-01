@@ -24,12 +24,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Load user from AsyncStorage on initial render (searching for existing user session)
     useEffect(() => {
         const getUser = async () => {
-            const hardCodedUser = {
-                username: 'testuser',
-                email: 'testuser@gmail.com',
-            };
-            await AsyncStorage.setItem('user', JSON.stringify(hardCodedUser)); // For testing purposes
-            setUser(hardCodedUser);
+            // Elimina el hardcodeo de testuser
             const storedUser = await AsyncStorage.getItem('user');
             if (storedUser) setUser(JSON.parse(storedUser));
         };
@@ -37,10 +32,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }, []);
 
     // Function to sign in a user
-    const signIn = async (username: string) => {
-        // Simulate an API call to authenticate the user
-        setUser(username);
-        await AsyncStorage.setItem('user', JSON.stringify(username));
+    const signIn = async (userData: any) => {
+        // Si viene un string, parsea, si viene objeto, usa directo
+        let userObj = userData;
+        if (typeof userData === 'string') {
+            try {
+                userObj = JSON.parse(userData);
+            } catch {
+                userObj = { username: userData };
+            }
+        }
+        setUser(userObj);
+        await AsyncStorage.setItem('user', JSON.stringify(userObj));
     };
 
     // Function to sign out the user

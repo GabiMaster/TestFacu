@@ -1,6 +1,9 @@
+import CustomAlert from '@/src/components/atoms/CustomAlert';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { moderateScale, verticalScale } from 'react-native-size-matters';
 import { COLOR } from '../../constants/colors';
 import { Icon } from '../../constants/icons';
@@ -12,12 +15,72 @@ const EditPersonalInfo = () => {
   const [nombre, setNombre] = useState(user?.nombre || user?.username || '');
   const [email, setEmail] = useState(user?.email || '');
   const [telefono, setTelefono] = useState(user?.telefono || '');
+  const [image, setImage] = useState(user?.image || null);
   const [loading, setLoading] = useState(false);
+  const [alert, setAlert] = useState<{visible: boolean, type: 'success' | 'error', message: string}>({visible: false, type: 'success', message: ''});
+
+  const requestPermission = async (type: 'camera' | 'media') => {
+    let status;
+    if (type === 'camera') {
+      const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
+      status = cameraStatus;
+    } else {
+      const { status: mediaStatus } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      status = mediaStatus;
+    }
+    if (status !== 'granted') {
+      setAlert({
+        visible: true,
+        type: 'error',
+        message: type === 'camera'
+          ? 'Necesitamos permiso para acceder a tu cámara. Por favor, actívalo en la configuración de tu dispositivo.'
+          : 'Necesitamos permiso para acceder a tus fotos. Por favor, actívalo en la configuración de tu dispositivo.'
+      });
+      return false;
+    }
+    return true;
+  };
+
+  const pickImage = async () => {
+    const hasPermission = await requestPermission('media');
+    if (!hasPermission) return;
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+    if (!result.canceled && result.assets && result.assets[0]?.uri) {
+      setImage(result.assets[0].uri);
+    }
+  };
+
+  const takePhoto = async () => {
+    const hasPermission = await requestPermission('camera');
+    if (!hasPermission) return;
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+    if (!result.canceled && result.assets && result.assets[0]?.uri) {
+      setImage(result.assets[0].uri);
+    }
+  };
 
   const handleSave = async () => {
     setLoading(true);
     try {
-      await updateUser({ nombre, email, telefono, username: nombre });
+      await updateUser({ nombre, email, telefono, username: nombre, image });
+      // Guarda la imagen en el usuario persistente
+      const usersRaw = await AsyncStorage.getItem('users');
+      let users = usersRaw ? JSON.parse(usersRaw) : [];
+      const idx = users.findIndex((u: any) => u.email === user?.email);
+      if (idx !== -1) {
+        users[idx] = { ...users[idx], nombre, email, telefono, username: nombre, image };
+        await AsyncStorage.setItem('users', JSON.stringify(users));
+      }
+      await AsyncStorage.setItem('user', JSON.stringify({ ...user, nombre, email, telefono, username: nombre, image }));
       Alert.alert('Éxito', 'Datos actualizados correctamente');
       router.back();
     } catch (e) {
@@ -37,6 +100,23 @@ const EditPersonalInfo = () => {
         <Text style={styles.headerTitle}>Editar Información</Text>
       </View>
       <View style={styles.body}>
+        <View style={{ alignItems: 'center', marginBottom: 16 }}>
+          {image ? (
+            <Image source={{ uri: image }} style={{ width: 100, height: 100, borderRadius: 50, marginBottom: 8 }} />
+          ) : (
+            <View style={{ width: 100, height: 100, borderRadius: 50, backgroundColor: COLOR.surface, alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
+              <Icon name="account-outline" size={48} color={COLOR.icon} />
+            </View>
+          )}
+          <View style={{ flexDirection: 'row', gap: 12 }}>
+            <TouchableOpacity onPress={pickImage} style={{ backgroundColor: COLOR.primary, borderRadius: 8, padding: 8, marginRight: 8 }}>
+              <Text style={{ color: COLOR.textPrimary, fontWeight: 'bold' }}>Subir foto</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={takePhoto} style={{ backgroundColor: COLOR.primary, borderRadius: 8, padding: 8 }}>
+              <Text style={{ color: COLOR.textPrimary, fontWeight: 'bold' }}>Tomar foto</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
         <Text style={styles.label}>Nombre Completo</Text>
         <TextInput
           style={styles.input}
@@ -67,6 +147,12 @@ const EditPersonalInfo = () => {
           <Text style={styles.saveButtonText}>{loading ? 'Guardando...' : 'Guardar'}</Text>
         </TouchableOpacity>
       </View>
+      <CustomAlert
+        visible={alert.visible}
+        type={alert.type}
+        message={alert.message}
+        onClose={() => setAlert(a => ({...a, visible: false}))}
+      />
     </SafeAreaView>
   );
 };

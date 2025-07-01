@@ -1,6 +1,9 @@
 import ButtonComponent from '@/src/components/atoms/ButtonComponent';
+import CustomAlert from '@/src/components/atoms/CustomAlert';
 import { COLOR } from '@/src/constants/colors';
 import { Icon } from '@/src/constants/icons';
+import { useAuth } from '@/src/hooks/useAuth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { Modal, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -20,10 +23,54 @@ const RegisterPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
+  const { signIn } = useAuth();
+  const [nombre, setNombre] = useState('');
+  const [apellido, setApellido] = useState('');
+  const [telefono, setTelefono] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [alert, setAlert] = useState<{visible: boolean, type: 'success' | 'error', message: string}>({visible: false, type: 'success', message: ''});
 
   const handleAcceptTerms = () => {
     setAcceptTerms(true);
     setShowTermsModal(false);
+  };
+
+  // Lógica de registro
+  const handleRegister = async () => {
+    if (!nombre || !apellido || !telefono || !email || !password || !confirmPassword) {
+      setAlert({visible: true, type: 'error', message: 'Por favor completa todos los campos.'});
+      return;
+    }
+    if (password !== confirmPassword) {
+      setAlert({visible: true, type: 'error', message: 'Las contraseñas no coinciden.'});
+      return;
+    }
+    // Obtener usuarios existentes
+    const usersRaw = await AsyncStorage.getItem('users');
+    const users = usersRaw ? JSON.parse(usersRaw) : [];
+    if (users.find((u: any) => u.email === email)) {
+      setAlert({visible: true, type: 'error', message: 'Ya existe una cuenta con ese correo.'});
+      return;
+    }
+    const newUser = {
+      nombre,
+      apellido,
+      telefono,
+      email,
+      password,
+      username: nombre,
+    };
+    users.push(newUser);
+    await AsyncStorage.setItem('users', JSON.stringify(users));
+    await AsyncStorage.setItem('user', JSON.stringify(newUser));
+    await signIn(JSON.stringify(newUser));
+    setAlert({visible: true, type: 'success', message: '¡Registro exitoso!'});
+    setTimeout(() => {
+      setAlert(a => ({...a, visible: false}));
+      router.replace('/(tabs)');
+    }, 1500);
   };
 
   return (
@@ -48,6 +95,8 @@ const RegisterPage = () => {
               placeholder="Nombre"
               placeholderTextColor={COLOR.icon}
               autoCapitalize="words"
+              value={nombre}
+              onChangeText={setNombre}
             />
           </View>
           <View style={styles.inputRow}>
@@ -57,6 +106,8 @@ const RegisterPage = () => {
               placeholder="Apellido"
               placeholderTextColor={COLOR.icon}
               autoCapitalize="words"
+              value={apellido}
+              onChangeText={setApellido}
             />
           </View>
           <View style={styles.inputRow}>
@@ -66,6 +117,8 @@ const RegisterPage = () => {
               placeholder="Número de telefono"
               placeholderTextColor={COLOR.icon}
               keyboardType="phone-pad"
+              value={telefono}
+              onChangeText={setTelefono}
             />
           </View>
           <View style={styles.inputRow}>
@@ -76,6 +129,8 @@ const RegisterPage = () => {
               placeholderTextColor={COLOR.icon}
               keyboardType="email-address"
               autoCapitalize="none"
+              value={email}
+              onChangeText={setEmail}
             />
           </View>
           <View style={styles.inputRow}>
@@ -85,6 +140,8 @@ const RegisterPage = () => {
               placeholder="Contraseña"
               placeholderTextColor={COLOR.icon}
               secureTextEntry={!showPassword}
+              value={password}
+              onChangeText={setPassword}
             />
             <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
               <Icon
@@ -101,6 +158,8 @@ const RegisterPage = () => {
               placeholder="Confirmar contraseña"
               placeholderTextColor={COLOR.icon}
               secureTextEntry={!showPassword}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
             />
             <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
               <Icon
@@ -141,7 +200,7 @@ const RegisterPage = () => {
               !acceptTerms && { opacity: 0.5 }
             ]}
           >
-            <ButtonComponent title="Registrarse" />
+            <ButtonComponent title="Registrarse" onPress={handleRegister} disabled={!acceptTerms} />
           </TouchableOpacity>
         </View>
       </View>
@@ -185,6 +244,12 @@ const RegisterPage = () => {
           </View>
         </View>
       </Modal>
+      <CustomAlert
+        visible={alert.visible}
+        type={alert.type}
+        message={alert.message}
+        onClose={() => setAlert(a => ({...a, visible: false}))}
+      />
     </SafeAreaView>
   );
 };

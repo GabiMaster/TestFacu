@@ -1,22 +1,29 @@
 import { COLOR } from '@/src/constants/colors';
 import { Icon } from '@/src/constants/icons';
+import { useAuth } from '@/src/hooks/useAuth';
 import { router } from 'expo-router';
 import React from 'react';
 import { Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
 
 const Home = () => {
+  const { user } = useAuth();
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <View style={styles.avatarCircle}>
-            <Icon name="account-circle-outline" size={moderateScale(38)} color={COLOR.icon} />
+            {user?.image ? (
+              <Image source={{ uri: user.image }} style={{ width: moderateScale(48), height: moderateScale(48), borderRadius: moderateScale(24) }} />
+            ) : (
+              <Icon name="account-circle-outline" size={moderateScale(38)} color={COLOR.icon} />
+            )}
           </View>
-          <View style={styles.headerTextContainer}>
-            <Text style={styles.welcomeText}>Bienvenido</Text>
-            <Text style={styles.usernameText}>(Nombre de Usuario)</Text>
+          <View style={[styles.headerTextContainer, { marginLeft: 8 }]}>
+            <Text style={[styles.welcomeText, { marginBottom: 2 }]}>Bienvenido</Text>
+            <Text style={styles.usernameText}>{user?.nombre || user?.username || 'Usuario'}</Text>
           </View>
         </View>
         <TouchableOpacity style={styles.headerRight}>

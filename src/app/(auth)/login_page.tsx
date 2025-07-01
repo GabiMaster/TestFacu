@@ -1,6 +1,9 @@
 import ButtonComponent from '@/src/components/atoms/ButtonComponent';
+import CustomAlert from '@/src/components/atoms/CustomAlert';
 import { COLOR } from '@/src/constants/colors';
 import { Icon } from '@/src/constants/icons';
+import { useAuth } from '@/src/hooks/useAuth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import { Image, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
@@ -8,6 +11,32 @@ import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const { signIn } = useAuth();
+  const [alert, setAlert] = useState<{visible: boolean, type: 'success' | 'error', message: string}>({visible: false, type: 'success', message: ''});
+
+  // Lógica de login
+  const handleLogin = async () => {
+    if (!email || !password) {
+      setAlert({visible: true, type: 'error', message: 'Por favor completa todos los campos.'});
+      return;
+    }
+    const usersRaw = await AsyncStorage.getItem('users');
+    const users = usersRaw ? JSON.parse(usersRaw) : [];
+    const user = users.find((u: any) => u.email === email && u.password === password);
+    if (!user) {
+      setAlert({visible: true, type: 'error', message: 'Correo o contraseña incorrectos.'});
+      return;
+    }
+    await AsyncStorage.setItem('user', JSON.stringify(user));
+    await signIn(JSON.stringify(user));
+    setAlert({visible: true, type: 'success', message: '¡Bienvenido!'});
+    setTimeout(() => {
+      setAlert(a => ({...a, visible: false}));
+      router.replace('/(tabs)');
+    }, 1200);
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -23,6 +52,8 @@ const LoginPage = () => {
                 placeholderTextColor={COLOR.icon}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                value={email}
+                onChangeText={setEmail}
               />
             </View>
           
@@ -33,6 +64,8 @@ const LoginPage = () => {
                 placeholder="Contraseña"
                 placeholderTextColor={COLOR.icon}
                 secureTextEntry={!showPassword}
+                value={password}
+                onChangeText={setPassword}
               />
               <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                 <Icon
@@ -42,7 +75,8 @@ const LoginPage = () => {
               />
               </TouchableOpacity>
             </View>
-            <ButtonComponent title="Ingresar"/>
+            {/* Reemplazar el botón de ingresar */}
+            <ButtonComponent title="Ingresar" onPress={handleLogin} />
           </View>
           <View style={styles.registerRow}>
             <Text style={styles.registerText}>Soy nuevo usuario. </Text>
@@ -70,6 +104,12 @@ const LoginPage = () => {
           </TouchableOpacity>
         </View>
       </View>
+      <CustomAlert
+        visible={alert.visible}
+        type={alert.type}
+        message={alert.message}
+        onClose={() => setAlert(a => ({...a, visible: false}))}
+      />
     </SafeAreaView>
   );
 };

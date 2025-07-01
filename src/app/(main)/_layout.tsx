@@ -3,7 +3,7 @@ import React from 'react';
 
 const MainLayout = () => {
   return (
-    <Stack>
+    <Stack screenOptions={{ animation: 'fade' }}>
         <Stack.Screen name="index" options={{ headerShown: false }} />
         <Stack.Screen name="new_project" options={{ headerShown: false }} />
     </Stack>

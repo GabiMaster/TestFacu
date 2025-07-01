@@ -1,6 +1,9 @@
+import CustomAlert from '@/src/components/atoms/CustomAlert';
+import { useAuth } from '@/src/hooks/useAuth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { moderateScale, verticalScale } from 'react-native-size-matters';
 import { COLOR } from '../../constants/colors';
 import { Icon } from '../../constants/icons';
@@ -13,25 +16,38 @@ const CambiarContrasena = () => {
   const [showNew, setShowNew] = useState(false);
   const [showRepeat, setShowRepeat] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [alert, setAlert] = useState<{visible: boolean, type: 'success' | 'error', message: string}>({visible: false, type: 'success', message: ''});
   const router = useRouter();
+  const { user, updateUser } = useAuth();
 
-  const handleChange = () => {
+  const handleChange = async () => {
     if (!current || !newPass || !repeat) {
-      Alert.alert('Error', 'Por favor completa todos los campos.');
+      setAlert({visible: true, type: 'error', message: 'Por favor completa todos los campos.'});
       return;
     }
     if (newPass !== repeat) {
-      Alert.alert('Error', 'Las contraseñas nuevas no coinciden.');
+      setAlert({visible: true, type: 'error', message: 'Las contraseñas nuevas no coinciden.'});
       return;
     }
-    setLoading(true);
+    // Validar contraseña actual
+    const usersRaw = await AsyncStorage.getItem('users');
+    let users = usersRaw ? JSON.parse(usersRaw) : [];
+    const idx = users.findIndex((u: any) => u.email === user?.email);
+    if (idx === -1 || users[idx].password !== current) {
+      setAlert({visible: true, type: 'error', message: 'La contraseña actual es incorrecta.'});
+      return;
+    }
+    // Actualizar contraseña
+    users[idx].password = newPass;
+    await AsyncStorage.setItem('users', JSON.stringify(users));
+    await updateUser({ password: newPass });
+    await AsyncStorage.setItem('user', JSON.stringify({...user, password: newPass}));
+    setAlert({visible: true, type: 'success', message: 'Contraseña cambiada correctamente.'});
+    setCurrent(''); setNewPass(''); setRepeat('');
     setTimeout(() => {
-      setLoading(false);
-      Alert.alert('Éxito', 'Contraseña cambiada correctamente.');
-      setCurrent('');
-      setNewPass('');
-      setRepeat('');
-    }, 1200);
+      setAlert(a => ({...a, visible: false}));
+      router.replace('/(tabs)/settings');
+    }, 1500);
   };
 
   return (
@@ -89,6 +105,12 @@ const CambiarContrasena = () => {
           <Text style={styles.saveButtonText}>{loading ? 'Guardando...' : 'Guardar'}</Text>
         </TouchableOpacity>
       </View>
+      <CustomAlert
+        visible={alert.visible}
+        type={alert.type}
+        message={alert.message}
+        onClose={() => setAlert(a => ({...a, visible: false}))}
+      />
     </SafeAreaView>
   );
 };

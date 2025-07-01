@@ -12,7 +12,7 @@ export default function EditorLayout() {
         screenOptions={{
           headerShown: false,
           gestureEnabled: false,
-          animation: 'slide_from_right',
+          animation: 'fade', // Transición suave entre vistas
         }}
       >
         <Stack.Screen 

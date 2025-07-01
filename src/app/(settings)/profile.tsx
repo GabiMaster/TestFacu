@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React from 'react';
-import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
 import { COLOR } from '../../constants/colors';
 import { Icon } from '../../constants/icons';
@@ -21,7 +21,11 @@ const Profile = () => {
       {/* Header con gradiente y avatar */}
       <LinearGradient colors={[COLOR.primary, COLOR.primaryDark]} style={styles.headerGradient}>
         <View style={styles.avatarCircle}>
-          <Icon name="account-circle-outline" size={moderateScale(60)} color={COLOR.icon} />
+          {user?.image ? (
+            <Image source={{ uri: user.image }} style={{ width: moderateScale(90), height: moderateScale(90), borderRadius: moderateScale(45) }} />
+          ) : (
+            <Icon name="account-circle-outline" size={moderateScale(60)} color={COLOR.icon} />
+          )}
         </View>
         <Text style={styles.username}>{user?.nombre || user?.username || 'Usuario'}</Text>
         <Text style={styles.email}>{user?.email || 'correo@ejemplo.com'}</Text>
@@ -51,17 +55,17 @@ const Profile = () => {
         </TouchableOpacity>
         {/* Notificaciones */}
         <View style={styles.sectionBox}>
-          <View style={styles.sectionRow}>
+          <TouchableOpacity style={styles.sectionRow} onPress={() => router.push('/(settings)/notificaciones')}>
             <Icon name="bell-outline" size={24} color={COLOR.icon} />
             <Text style={styles.sectionText}>Notificaciones</Text>
-          </View>
+          </TouchableOpacity>
         </View>
         {/* Mensajes */}
         <View style={styles.sectionBox}>
-          <View style={styles.sectionRow}>
+          <TouchableOpacity style={styles.sectionRow} onPress={() => router.push('/(settings)/mensajes')}>
             <Icon name="message-outline" size={24} color={COLOR.icon} />
             <Text style={styles.sectionText}>Mensajes</Text>
-          </View>
+          </TouchableOpacity>
         </View>
       </ScrollView>
       {/* Botón de logout/cambiar cuenta abajo a la derecha */}
