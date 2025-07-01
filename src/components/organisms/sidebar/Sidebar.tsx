@@ -15,6 +15,7 @@ import { SidebarBody } from './SidebarBody';
 import { SidebarFooter } from './SidebarFooter';
 import { SidebarHeader } from './SidebarHeader';
 import { SidebarHomeView } from './SidebarHomeView';
+import { SidebarSearchView } from './SidebarSearchView';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const SIDEBAR_WIDTH = SCREEN_WIDTH * 0.75;
@@ -145,12 +146,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
         );
       
       case 'search':
-        return (
-          <View style={styles.placeholderView}>
-            <Text style={styles.placeholderText}>Vista de Búsqueda</Text>
-            <Text style={styles.placeholderSubtext}>Funcionalidad en desarrollo</Text>
-          </View>
-        );
+        return <SidebarSearchView onClose={closeSidebar} />;
       
       case 'git':
         return (
