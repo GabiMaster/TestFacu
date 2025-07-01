@@ -5,12 +5,12 @@ import { FileSystemManager } from '@/src/utils/fileSystem/FileSystemManager';
 import { getDefaultContentByFileName } from '@/src/utils/fileSystem/defaultFileContents';
 import React, { useCallback, useState } from 'react';
 import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from 'react-native';
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
 

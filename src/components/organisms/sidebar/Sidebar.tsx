@@ -174,11 +174,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
   };
 
   const handleSettings = () => {
-    console.log('Configuración del explorador');
+    console.log('🔧 Sidebar: Navigating to settings');
+    closeSidebar(); // Cerrar la sidebar antes de navegar
+    router.push('/(tabs)/settings');
   };
 
   const handleHelp = () => {
-    console.log('Ayuda del explorador');
+    console.log('❓ Sidebar: Showing help');
+    Alert.alert(
+      '❓ Ayuda del Explorador',
+      '• 📁 Vista de Archivos: Gestiona tus archivos del proyecto\n' +
+      '• 🔍 Vista de Búsqueda: Busca en nombres de archivos y contenido\n' +
+      '• 🌐 Vista de Git: Clona repositorios públicos de GitHub\n' +
+      '• 🏠 Vista de Inicio: Acceso rápido a funciones principales\n\n' +
+      '💡 Tip: Usa el menú contextual (mantén presionado) en archivos para más opciones',
+      [{ text: 'Entendido', style: 'default' }]
+    );
   };
 
   // Renderizar contenido según la vista actual
