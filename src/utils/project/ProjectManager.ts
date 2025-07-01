@@ -34,7 +34,6 @@ export class ProjectManager {
       const projectsData = await AsyncStorage.getItem(this.PROJECTS_KEY);
       if (projectsData) {
         const projects = JSON.parse(projectsData);
-        console.log('📂 Loaded projects:', projects.length);
         return projects;
       }
       return [];
@@ -293,7 +292,6 @@ export class ProjectManager {
       projects.push(newProject);
       
       await AsyncStorage.setItem(this.PROJECTS_KEY, JSON.stringify(projects));
-      console.log('✅ Project created:', newProject.name, 'with', defaultFiles.length, 'files');
       
       return newProject;
     } catch (error) {
@@ -321,7 +319,6 @@ export class ProjectManager {
       };
 
       await AsyncStorage.setItem(this.PROJECTS_KEY, JSON.stringify(projects));
-      console.log('✅ Project updated:', projects[projectIndex].name);
       
       return projects[projectIndex];
     } catch (error) {
@@ -330,20 +327,14 @@ export class ProjectManager {
     }
   }
 
-  /**
-   * Elimina un proyecto
-   */
   static async deleteProject(id: string): Promise<void> {
     try {
       const projects = await this.getAllProjects();
       const filteredProjects = projects.filter(p => p.id !== id);
       
       await AsyncStorage.setItem(this.PROJECTS_KEY, JSON.stringify(filteredProjects));
-      
-      // También remover de proyectos recientes
       await this.removeFromRecentProjects(id);
       
-      console.log('✅ Project deleted:', id);
     } catch (error) {
       console.error('❌ Error deleting project:', error);
       throw new Error('No se pudo eliminar el proyecto');
@@ -358,11 +349,8 @@ export class ProjectManager {
   static async setCurrentProject(project: Project): Promise<void> {
     try {
       await AsyncStorage.setItem(this.CURRENT_PROJECT_KEY, JSON.stringify(project));
-      
-      // Agregar a proyectos recientes
       await this.addToRecentProjects(project);
       
-      console.log('✅ Current project set:', project.name);
     } catch (error) {
       console.error('❌ Error setting current project:', error);
       throw new Error('No se pudo establecer el proyecto actual');
@@ -391,7 +379,6 @@ export class ProjectManager {
   static async clearCurrentProject(): Promise<void> {
     try {
       await AsyncStorage.removeItem(this.CURRENT_PROJECT_KEY);
-      console.log('✅ Current project cleared');
     } catch (error) {
       console.error('❌ Error clearing current project:', error);
     }
@@ -409,7 +396,6 @@ export class ProjectManager {
           lastModified: new Date().toISOString()
         });
         
-        // Actualizar también el proyecto actual en cache
         await this.setCurrentProject(updatedProject);
       }
     } catch (error) {
@@ -427,7 +413,6 @@ export class ProjectManager {
       const recentData = await AsyncStorage.getItem(this.RECENT_PROJECTS_KEY);
       if (recentData) {
         const recent = JSON.parse(recentData);
-        // Ordenar por fecha de modificación más reciente
         return recent.sort((a: RecentProject, b: RecentProject) => 
           new Date(b.lastModified).getTime() - new Date(a.lastModified).getTime()
         );
@@ -446,10 +431,8 @@ export class ProjectManager {
     try {
       const recentProjects = await this.getRecentProjects();
       
-      // Remover si ya existe
       const filtered = recentProjects.filter(p => p.id !== project.id);
       
-      // Agregar al inicio
       const newRecent: RecentProject = {
         id: project.id,
         name: project.name,
@@ -459,26 +442,20 @@ export class ProjectManager {
       
       filtered.unshift(newRecent);
       
-      // Mantener solo los últimos 10
       const limited = filtered.slice(0, 10);
       
       await AsyncStorage.setItem(this.RECENT_PROJECTS_KEY, JSON.stringify(limited));
-      console.log('✅ Added to recent projects:', project.name);
     } catch (error) {
       console.error('❌ Error adding to recent projects:', error);
     }
   }
 
-  /**
-   * Remueve un proyecto de la lista de recientes
-   */
   static async removeFromRecentProjects(projectId: string): Promise<void> {
     try {
       const recentProjects = await this.getRecentProjects();
       const filtered = recentProjects.filter(p => p.id !== projectId);
       
       await AsyncStorage.setItem(this.RECENT_PROJECTS_KEY, JSON.stringify(filtered));
-      console.log('✅ Removed from recent projects:', projectId);
     } catch (error) {
       console.error('❌ Error removing from recent projects:', error);
     }

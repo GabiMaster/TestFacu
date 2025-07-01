@@ -62,10 +62,8 @@ export const useSidebar = () => {
     ]
   );
 
-  // Cargar archivos al inicializar
   useEffect(() => {
     const initializeFiles = async () => {
-      console.log('🔄 Initializing file structure...');
       await loadFileStructure();
     };
     initializeFiles();
@@ -73,15 +71,10 @@ export const useSidebar = () => {
 
   const loadFileStructure = async () => {
     try {
-      console.log('📂 Loading file structure from storage...');
       const savedFiles = await FileSystemManager.loadFileStructure();
-      console.log('📂 Loaded files:', savedFiles);
       
       if (savedFiles.length > 0) {
-        console.log('✅ Setting loaded files to state');
         setFiles(savedFiles);
-      } else {
-        console.log('⚠️ No saved files found, keeping default structure');
       }
     } catch (error) {
       console.error('❌ Error loading file structure:', error);
@@ -105,15 +98,11 @@ export const useSidebar = () => {
   }, []);
 
   const openSidebar = useCallback(() => {
-    console.log('🔧 useSidebar: openSidebar called, setting isOpen to true');
     setIsOpen(true);
-    console.log('✅ useSidebar: openSidebar completed');
   }, []);
 
   const changeView = useCallback((view: SidebarView) => {
-    console.log('🔧 useSidebar: changeView called with:', view);
     setCurrentView(view);
-    console.log('✅ useSidebar: changeView completed, new view:', view);
   }, []);
 
   const selectFile = useCallback((file: FileItem) => {
@@ -133,7 +122,6 @@ export const useSidebar = () => {
   }, [saveFileStructure]);
 
   const createNewFile = useCallback((name: string, parentPath?: string) => {
-    console.log('🔧 Creating new file:', { name, parentPath });
     
     const newFile: FileItem = {
       id: Date.now().toString(),
@@ -143,18 +131,12 @@ export const useSidebar = () => {
       extension: name.split('.').pop()
     };
 
-    console.log('📄 New file object:', newFile);
-
     setFiles(prevFiles => {
-      console.log('📁 Current files before creation:', prevFiles.length, 'files');
-      console.log('📁 Current files names:', prevFiles.map(f => f.name));
-      
       let newFiles: FileItem[];
       
       if (parentPath) {
         newFiles = prevFiles.map(file => {
           if (file.path === parentPath && file.type === 'folder') {
-            console.log('📂 Adding file to folder:', file.name);
             return {
               ...file,
               children: [...(file.children || []), newFile]
@@ -163,20 +145,9 @@ export const useSidebar = () => {
           return file;
         });
       } else {
-        console.log('📄 Adding file to root');
         newFiles = [...prevFiles, newFile];
       }
       
-      console.log('📁 New files after creation:', newFiles.length, 'files');
-      console.log('📁 New files names:', newFiles.map(f => f.name));
-      console.log('📋 Files structure:', newFiles.map(f => ({ 
-        name: f.name, 
-        type: f.type, 
-        children: f.children?.length || 0,
-        id: f.id 
-      })));
-      
-      // Guardar de forma asíncrona sin bloquear el setFiles
       setTimeout(() => {
         saveFileStructure(newFiles);
       }, 0);
@@ -186,7 +157,6 @@ export const useSidebar = () => {
   }, [saveFileStructure]);
 
   const createNewFolder = useCallback((name: string, parentPath?: string) => {
-    console.log('🔧 Creating new folder:', { name, parentPath });
     
     const newFolder: FileItem = {
       id: Date.now().toString(),
@@ -197,18 +167,12 @@ export const useSidebar = () => {
       isOpen: false
     };
 
-    console.log('📂 New folder object:', newFolder);
-
     setFiles(prevFiles => {
-      console.log('📁 Current files before creation:', prevFiles.length, 'files');
-      console.log('📁 Current files names:', prevFiles.map(f => f.name));
-      
       let newFiles: FileItem[];
       
       if (parentPath) {
         newFiles = prevFiles.map(file => {
           if (file.path === parentPath && file.type === 'folder') {
-            console.log('📂 Adding folder to parent folder:', file.name);
             return {
               ...file,
               children: [...(file.children || []), newFolder]
@@ -217,20 +181,9 @@ export const useSidebar = () => {
           return file;
         });
       } else {
-        console.log('📂 Adding folder to root');
         newFiles = [...prevFiles, newFolder];
       }
       
-      console.log('📁 New files after creation:', newFiles.length, 'files');
-      console.log('📁 New files names:', newFiles.map(f => f.name));
-      console.log('📋 Files structure:', newFiles.map(f => ({ 
-        name: f.name, 
-        type: f.type, 
-        children: f.children?.length || 0,
-        id: f.id 
-      })));
-      
-      // Guardar de forma asíncrona sin bloquear el setFiles
       setTimeout(() => {
         saveFileStructure(newFiles);
       }, 0);
@@ -357,12 +310,10 @@ export const useSidebar = () => {
   // ==================== CONTEXT MENU OPERATIONS ====================
 
   const copyFile = useCallback((file: FileItem) => {
-    console.log('📋 Copying file:', file.name);
     FileSystemManager.copyToClipboard(file);
   }, []);
 
   const cutFile = useCallback((file: FileItem) => {
-    console.log('✂️ Cutting file:', file.name);
     FileSystemManager.cutToClipboard(file);
   }, []);
 

@@ -19,41 +19,26 @@ export class FileSystemManager {
 
   // ==================== CRUD OPERATIONS ====================
   
-  /**
-   * Guarda la estructura de archivos
-   */
   static async saveFileStructure(files: FileItem[]): Promise<void> {
     try {
-      console.log('💾 Saving file structure to AsyncStorage:', files.length, 'files');
-      console.log('💾 Structure:', files.map(f => ({ name: f.name, type: f.type, children: f.children?.length || 0 })));
-      
       await AsyncStorage.setItem(
         this.STORAGE_KEYS.FILES_STRUCTURE, 
         JSON.stringify(files)
       );
-      
-      console.log('✅ File structure saved successfully');
     } catch (error) {
       console.error('❌ Error saving file structure:', error);
       throw new Error('No se pudo guardar la estructura de archivos');
     }
   }
 
-  /**
-   * Carga la estructura de archivos
-   */
   static async loadFileStructure(): Promise<FileItem[]> {
     try {
-      console.log('📂 Loading file structure from AsyncStorage...');
       const stored = await AsyncStorage.getItem(this.STORAGE_KEYS.FILES_STRUCTURE);
       
       if (stored) {
         const files = JSON.parse(stored);
-        console.log('📂 Loaded file structure:', files.length, 'files');
-        console.log('📂 Structure:', files.map((f: FileItem) => ({ name: f.name, type: f.type, children: f.children?.length || 0 })));
         return files;
       } else {
-        console.log('📂 No stored file structure found');
         return [];
       }
     } catch (error) {
@@ -337,15 +322,10 @@ export class FileSystemManager {
    * Copia un archivo/carpeta al portapapeles
    */
   static copyToClipboard(file: FileItem): void {
-    console.log('📋 Copying to clipboard:', file.name);
     this.clipboard = { file: { ...file }, operation: 'copy' };
   }
 
-  /**
-   * Corta un archivo/carpeta al portapapeles
-   */
   static cutToClipboard(file: FileItem): void {
-    console.log('✂️ Cutting to clipboard:', file.name);
     this.clipboard = { file: { ...file }, operation: 'cut' };
   }
 
@@ -370,27 +350,20 @@ export class FileSystemManager {
     return this.clipboard !== null;
   }
 
-  /**
-   * Renombra un archivo o carpeta
-   */
   static async renameFileOrFolder(
     files: FileItem[], 
     targetId: string, 
     newName: string
   ): Promise<FileItem[]> {
     try {
-      console.log('✏️ Renaming file/folder:', targetId, 'to:', newName);
-      
       const renameInTree = (items: FileItem[]): FileItem[] => {
         return items.map(item => {
           if (item.id === targetId) {
-            // Actualizar el nombre y la extensión si es archivo
             const updatedItem = { ...item, name: newName };
             if (item.type === 'file') {
               const lastDot = newName.lastIndexOf('.');
               updatedItem.extension = lastDot > 0 ? newName.substring(lastDot + 1) : '';
             }
-            console.log('✅ Item renamed:', updatedItem);
             return updatedItem;
           }
           
@@ -405,7 +378,6 @@ export class FileSystemManager {
       const updatedFiles = renameInTree(files);
       await this.saveFileStructure(updatedFiles);
       
-      console.log('✅ File/folder renamed successfully');
       return updatedFiles;
     } catch (error) {
       console.error('❌ Error renaming file/folder:', error);
@@ -413,41 +385,33 @@ export class FileSystemManager {
     }
   }
 
-  /**
-   * Elimina un archivo o carpeta del árbol
-   */
   static async deleteFileOrFolder(
     files: FileItem[], 
     targetId: string
   ): Promise<FileItem[]> {
     try {
-      console.log('🗑️ Deleting file/folder:', targetId);
-      
       const deleteFromTree = (items: FileItem[]): FileItem[] => {
         return items.filter(item => {
           if (item.id === targetId) {
-            console.log('✅ Item deleted:', item.name);
-            // Si es un archivo, también eliminar su contenido
             if (item.type === 'file') {
               this.deleteFile(item.id).catch(err => 
                 console.warn('⚠️ Could not delete file content:', err)
               );
             }
-            return false; // Excluir del array
+            return false;
           }
           
           if (item.children) {
             item.children = deleteFromTree(item.children);
           }
           
-          return true; // Mantener en el array
+          return true;
         });
       };
 
       const updatedFiles = deleteFromTree(files);
       await this.saveFileStructure(updatedFiles);
       
-      console.log('✅ File/folder deleted successfully');
       return updatedFiles;
     } catch (error) {
       console.error('❌ Error deleting file/folder:', error);
@@ -466,19 +430,14 @@ export class FileSystemManager {
   ): Promise<FileItem[]> {
     try {
       if (!this.clipboard) {
-        console.log('❌ No hay elementos en el portapapeles');
         throw new Error('No hay elementos para pegar');
       }
 
-      console.log('📋 Pasting from clipboard:', this.clipboard.file.name, 'operation:', this.clipboard.operation);
-      
       const { file: clipboardFile, operation } = this.clipboard;
       
-      // Generar nuevo ID para evitar duplicados
       const newId = Date.now().toString();
       const newName = operation === 'copy' ? `${clipboardFile.name} - copia` : clipboardFile.name;
       
-      // Crear el nuevo archivo/carpeta
       const newItem: FileItem = {
         ...clipboardFile,
         id: newId,
@@ -487,14 +446,10 @@ export class FileSystemManager {
         children: clipboardFile.children ? await this.duplicateChildren(clipboardFile.children, `${targetFolderPath || ''}/${newName}`) : undefined
       };
 
-      console.log('📄 Creating pasted item:', newItem);
-
-      // Si es una copia de archivo, duplicar su contenido
       if (operation === 'copy' && clipboardFile.type === 'file') {
         try {
           const originalContent = await this.loadFileContent(clipboardFile.id);
           await this.saveFileContent(newId, originalContent);
-          console.log('✅ File content duplicated successfully');
         } catch (error) {
           console.warn('⚠️ Could not duplicate file content:', error);
         }
@@ -504,25 +459,18 @@ export class FileSystemManager {
       let updatedFiles: FileItem[];
       
       if (targetFolderPath) {
-        // Agregar a la carpeta especificada
         updatedFiles = this.addToFolder(files, targetFolderPath, newItem);
       } else {
-        // Agregar a la raíz
         updatedFiles = [...files, newItem];
       }
 
-      // Si es un corte, eliminar el original
       if (operation === 'cut') {
-        console.log('✂️ Removing original item after cut');
         updatedFiles = await this.deleteFileOrFolder(updatedFiles, clipboardFile.id);
-        // Limpiar el portapapeles después de cortar
         this.clearClipboard();
       }
 
-      // Guardar la estructura actualizada
       await this.saveFileStructure(updatedFiles);
       
-      console.log('✅ Paste operation completed successfully');
       return updatedFiles;
     } catch (error) {
       console.error('❌ Error pasting from clipboard:', error);
@@ -545,7 +493,6 @@ export class FileSystemManager {
         children: child.children ? await this.duplicateChildren(child.children, `${parentPath}/${child.name}`) : undefined
       };
       
-      // Si es un archivo, duplicar su contenido
       if (child.type === 'file') {
         try {
           const content = await this.loadFileContent(child.id);
@@ -561,13 +508,9 @@ export class FileSystemManager {
     return duplicatedChildren;
   }
 
-  /**
-   * Agrega un elemento a una carpeta específica
-   */
   private static addToFolder(files: FileItem[], targetFolderPath: string, newItem: FileItem): FileItem[] {
     return files.map(file => {
       if (file.path === targetFolderPath && file.type === 'folder') {
-        console.log('📂 Adding item to folder:', file.name);
         return {
           ...file,
           children: [...(file.children || []), newItem]

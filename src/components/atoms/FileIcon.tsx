@@ -1,5 +1,5 @@
-import { getColorsByTheme } from '@/src/constants/themeColors';
 import { Icon } from '@/src/constants/icons';
+import { getColorsByTheme } from '@/src/constants/themeColors';
 import { useTheme } from '@/src/utils/contexts/ThemeContext';
 import React from 'react';
 import { moderateScale } from 'react-native-size-matters';
@@ -30,7 +30,7 @@ export const FileIcon: React.FC<FileIconProps> = ({
     );
   }
 
-  // Iconos según extensión de archivo
+  // Iconos por tipo de archivo
   const getFileIcon = () => {
     switch (extension?.toLowerCase()) {
       case 'js':

@@ -1,7 +1,7 @@
 import { FileIcon } from '@/src/components/atoms/FileIcon';
 import { FileContextMenu } from '@/src/components/molecules/FileContextMenu';
-import { getColorsByTheme } from '@/src/constants/themeColors';
 import { Icon } from '@/src/constants/icons';
+import { getColorsByTheme } from '@/src/constants/themeColors';
 import { FileItem as FileItemType } from '@/src/hooks/sidebar/useSidebar';
 import { useTheme } from '@/src/utils/contexts/ThemeContext';
 import { router } from 'expo-router';

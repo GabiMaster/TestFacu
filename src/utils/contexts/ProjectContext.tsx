@@ -47,7 +47,6 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
   const loadInitialData = async () => {
     try {
       setIsLoading(true);
-      console.log('🔄 Loading initial project data...');
       
       const [allProjects, recent, current] = await Promise.all([
         ProjectManager.getAllProjects(),
@@ -59,11 +58,6 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
       setRecentProjects(recent);
       setCurrentProject(current);
       
-      console.log('✅ Initial project data loaded:', {
-        projects: allProjects.length,
-        recent: recent.length,
-        currentProject: current?.name || 'none'
-      });
     } catch (error) {
       console.error('❌ Error loading initial project data:', error);
     } finally {
@@ -79,13 +73,10 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
     initialFiles?: FileItem[]
   ): Promise<Project> => {
     try {
-      console.log('🆕 Creating new project:', name);
       const newProject = await ProjectManager.createProject(name, description, language, type, initialFiles);
       
-      // Actualizar estado local
       setProjects(prev => [...prev, newProject]);
       
-      console.log('✅ Project created successfully:', newProject.name);
       return newProject;
     } catch (error) {
       console.error('❌ Error creating project:', error);
@@ -95,18 +86,14 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
 
   const updateProject = async (id: string, updates: Partial<Project>): Promise<Project> => {
     try {
-      console.log('📝 Updating project:', id);
       const updatedProject = await ProjectManager.updateProject(id, updates);
       
-      // Actualizar estado local
       setProjects(prev => prev.map(p => p.id === id ? updatedProject : p));
       
-      // Si es el proyecto actual, actualizarlo también
       if (currentProject?.id === id) {
         setCurrentProject(updatedProject);
       }
       
-      console.log('✅ Project updated successfully:', updatedProject.name);
       return updatedProject;
     } catch (error) {
       console.error('❌ Error updating project:', error);
@@ -116,19 +103,15 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
 
   const deleteProject = useCallback(async (id: string): Promise<void> => {
     try {
-      console.log('🗑️ Deleting project:', id);
       await ProjectManager.deleteProject(id);
       
-      // Actualizar estado local
       setProjects(prev => prev.filter(p => p.id !== id));
       setRecentProjects(prev => prev.filter(p => p.id !== id));
       
-      // Si es el proyecto actual, limpiarlo
       if (currentProject?.id === id) {
         setCurrentProject(null);
       }
       
-      console.log('✅ Project deleted successfully');
     } catch (error) {
       console.error('❌ Error deleting project:', error);
       throw error;
@@ -137,18 +120,13 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
 
   const openProject = useCallback(async (project: Project): Promise<Project> => {
     try {
-      console.log('📂 Opening project:', project.name);
       await ProjectManager.setCurrentProject(project);
       
       setCurrentProject(project);
       
-      // Actualizar proyectos recientes
       const recent = await ProjectManager.getRecentProjects();
       setRecentProjects(recent);
       
-      console.log('✅ Project opened successfully:', project.name);
-      
-      // Retornar el proyecto para que el llamador pueda actualizar la sidebar
       return project;
     } catch (error) {
       console.error('❌ Error opening project:', error);
@@ -163,10 +141,8 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
       
       setCurrentProject(null);
       
-      console.log('✅ Project closed successfully');
     } catch (error) {
       console.error('❌ Error closing project:', error);
-      throw error;
     }
   };
 
@@ -177,15 +153,12 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
         return;
       }
       
-      console.log('📁 Updating current project files');
       await ProjectManager.updateCurrentProjectFiles(fileStructure);
       
-      // Actualizar estado local
       const updatedProject = { ...currentProject, fileStructure, lastModified: new Date().toISOString() };
       setCurrentProject(updatedProject);
       setProjects(prev => prev.map(p => p.id === currentProject.id ? updatedProject : p));
       
-      console.log('✅ Current project files updated');
     } catch (error) {
       console.error('❌ Error updating current project files:', error);
       throw error;
@@ -194,9 +167,7 @@ export const ProjectProvider: React.FC<ProjectProviderProps> = ({ children }) =>
 
   const searchProjects = async (query: string): Promise<Project[]> => {
     try {
-      console.log('🔍 Searching projects:', query);
       const results = await ProjectManager.searchProjects(query);
-      console.log('✅ Search completed:', results.length, 'results');
       return results;
     } catch (error) {
       console.error('❌ Error searching projects:', error);
