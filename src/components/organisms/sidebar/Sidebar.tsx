@@ -42,7 +42,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
     copyFile,
     cutFile,
     renameFileOrFolder,
-    deleteFileOrFolder
+    deleteFileOrFolder,
+    importFile
   } = useSidebarContext();
 
   const slideAnim = useRef(new Animated.Value(-SIDEBAR_WIDTH)).current;
@@ -135,6 +136,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
 
   const handleRefresh = () => {
     console.log('Refrescar archivos');
+  };
+
+  const handleImport = async () => {
+    try {
+      console.log('🔄 Importando archivo...');
+      await importFile();
+      console.log('✅ Archivo importado correctamente');
+    } catch (error) {
+      console.error('❌ Error al importar archivo:', error);
+      Alert.alert('Error', 'No se pudo importar el archivo. Inténtalo de nuevo.');
+    }
   };
 
   const handleSettings = () => {
@@ -250,6 +262,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
           onNewFile={handleNewFile}
           onNewFolder={handleNewFolder}
           onRefresh={handleRefresh}
+          onImport={handleImport}
           currentFolder={currentFolder}
           onClearCurrentFolder={() => setCurrentFolder(null)}
         />

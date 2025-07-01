@@ -279,17 +279,70 @@ export const useSidebar = () => {
 
   const importFile = useCallback(async () => {
     try {
+      console.log('📁 Starting file import...');
       const result = await FileSystemManager.importFile();
+      
       if (result) {
-        createNewFile(result.name);
-        // Guardar contenido del archivo
+        console.log('✅ File imported successfully:', result.name);
+        
+        // Generar ID único para el archivo
         const newFileId = Date.now().toString();
+        
+        // Obtener la ruta padre basada en la carpeta actual
+        const parentPath = currentFolder?.path;
+        
+        // Crear el archivo con el contenido
+        setFiles(prevFiles => {
+          const newFile: FileItem = {
+            id: newFileId,
+            name: result.name,
+            type: 'file',
+            path: parentPath ? `${parentPath}/${result.name}` : `/${result.name}`,
+            extension: result.extension
+          };
+
+          console.log('📄 Creating new file:', newFile);
+          
+          let newFiles: FileItem[];
+          
+          if (parentPath) {
+            // Agregar a la carpeta actual
+            newFiles = prevFiles.map(file => {
+              if (file.path === parentPath && file.type === 'folder') {
+                console.log('📂 Adding file to folder:', file.name);
+                return {
+                  ...file,
+                  children: [...(file.children || []), newFile]
+                };
+              }
+              return file;
+            });
+          } else {
+            // Agregar a la raíz
+            console.log('📂 Adding file to root');
+            newFiles = [...prevFiles, newFile];
+          }
+          
+          // Guardar estructura de archivos
+          setTimeout(() => {
+            saveFileStructure(newFiles);
+          }, 0);
+          
+          return newFiles;
+        });
+        
+        // Guardar el contenido del archivo
         await FileSystemManager.saveFileContent(newFileId, result.content);
+        
+        console.log('✅ File import completed successfully');
+      } else {
+        console.log('❌ File import cancelled or failed');
       }
     } catch (error) {
-      console.error('Error importing file:', error);
+      console.error('❌ Error importing file:', error);
+      throw error;
     }
-  }, [createNewFile]);
+  }, [currentFolder, saveFileStructure]);
 
   const exportFile = useCallback(async (fileId: string, fileName: string) => {
     try {

@@ -16,6 +16,7 @@ interface SidebarHeaderProps {
   onNewFile: () => void;
   onNewFolder: () => void;
   onRefresh: () => void;
+  onImport: () => void;
   currentFolder?: FileItem | null;
   onClearCurrentFolder?: () => void;
 }
@@ -25,6 +26,7 @@ export const SidebarHeader: React.FC<SidebarHeaderProps> = ({
   onNewFile,
   onNewFolder,
   onRefresh,
+  onImport,
   currentFolder,
   onClearCurrentFolder
 }) => {
@@ -117,18 +119,10 @@ export const SidebarHeader: React.FC<SidebarHeaderProps> = ({
             
             <TouchableOpacity 
               style={styles.headerButton}
-              onPress={onRefresh}
+              onPress={onImport}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              <Icon name="refresh" size={moderateScale(18)} color={COLOR.icon} />
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={styles.headerButton}
-              onPress={onClose}
-              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            >
-              <Icon name="close" size={moderateScale(18)} color={COLOR.icon} />
+              <Icon name="import" size={moderateScale(18)} color={COLOR.icon} />
             </TouchableOpacity>
           </View>
         </View>
