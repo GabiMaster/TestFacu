@@ -24,12 +24,17 @@ export class FileSystemManager {
    */
   static async saveFileStructure(files: FileItem[]): Promise<void> {
     try {
+      console.log('💾 Saving file structure to AsyncStorage:', files.length, 'files');
+      console.log('💾 Structure:', files.map(f => ({ name: f.name, type: f.type, children: f.children?.length || 0 })));
+      
       await AsyncStorage.setItem(
         this.STORAGE_KEYS.FILES_STRUCTURE, 
         JSON.stringify(files)
       );
+      
+      console.log('✅ File structure saved successfully');
     } catch (error) {
-      console.error('Error saving file structure:', error);
+      console.error('❌ Error saving file structure:', error);
       throw new Error('No se pudo guardar la estructura de archivos');
     }
   }
@@ -39,10 +44,20 @@ export class FileSystemManager {
    */
   static async loadFileStructure(): Promise<FileItem[]> {
     try {
+      console.log('📂 Loading file structure from AsyncStorage...');
       const stored = await AsyncStorage.getItem(this.STORAGE_KEYS.FILES_STRUCTURE);
-      return stored ? JSON.parse(stored) : [];
+      
+      if (stored) {
+        const files = JSON.parse(stored);
+        console.log('📂 Loaded file structure:', files.length, 'files');
+        console.log('📂 Structure:', files.map((f: FileItem) => ({ name: f.name, type: f.type, children: f.children?.length || 0 })));
+        return files;
+      } else {
+        console.log('📂 No stored file structure found');
+        return [];
+      }
     } catch (error) {
-      console.error('Error loading file structure:', error);
+      console.error('❌ Error loading file structure:', error);
       return [];
     }
   }
