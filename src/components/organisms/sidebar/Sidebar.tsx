@@ -1,7 +1,8 @@
 import { COLOR } from '@/src/constants/colors';
+import { InputModal } from '@/src/components/molecules/InputModal';
 import { useSidebarContext } from '@/src/utils/contexts/SidebarContext';
 import { router } from 'expo-router';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
     Alert,
     Animated,
@@ -41,6 +42,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
   const slideAnim = useRef(new Animated.Value(-SIDEBAR_WIDTH)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
 
+  // Estados para los modales de input
+  const [showFileModal, setShowFileModal] = useState(false);
+  const [showFolderModal, setShowFolderModal] = useState(false);
+
   // Animación del sidebar
   useEffect(() => {
     Animated.parallel([
@@ -73,57 +78,47 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
   };
 
   const handleNewFile = () => {
-    Alert.prompt(
-      'Nuevo Archivo',
-      'Ingresa el nombre del archivo (con extensión):',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Crear',
-          onPress: (fileName) => {
-            if (fileName?.trim()) {
-              // Crear el archivo
-              createNewFile(fileName.trim());
-              
-              // Cerrar sidebar y navegar al editor
-              closeSidebar();
-              router.push('/(editor)/editor');
-              
-              // Mensaje de éxito
-              setTimeout(() => {
-                Alert.alert('✅ Archivo Creado', `"${fileName}" se creó correctamente y está listo para editar.`);
-              }, 500);
-            }
-          }
-        }
-      ],
-      'plain-text',
-      'mi-archivo.js'
-    );
+    console.log('🎯 HandleNewFile called - showing modal');
+    setShowFileModal(true);
   };
 
   const handleNewFolder = () => {
-    Alert.prompt(
-      'Nueva Carpeta',
-      'Ingresa el nombre de la carpeta:',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Crear',
-          onPress: (folderName) => {
-            if (folderName?.trim()) {
-              // Crear la carpeta
-              createNewFolder(folderName.trim());
-              
-              // Mensaje de éxito
-              Alert.alert('✅ Carpeta Creada', `"${folderName}" se creó correctamente.`);
-            }
-          }
-        }
-      ],
-      'plain-text',
-      'mi-carpeta'
-    );
+    console.log('🎯 HandleNewFolder called - showing modal'); 
+    setShowFolderModal(true);
+  };
+
+  const handleFileModalConfirm = (fileName: string) => {
+    console.log('🎯 File modal confirmed with name:', fileName);
+    console.log('✅ Creating file...');
+    
+    // Crear el archivo
+    createNewFile(fileName);
+    
+    // Cerrar modal y sidebar
+    setShowFileModal(false);
+    closeSidebar();
+    
+    // Navegar al editor
+    router.push('/(editor)/editor');
+    
+    // Mensaje de éxito
+    setTimeout(() => {
+      Alert.alert('✅ Archivo Creado', `"${fileName}" se creó correctamente y está listo para editar.`);
+    }, 500);
+  };
+
+  const handleFolderModalConfirm = (folderName: string) => {
+    console.log('🎯 Folder modal confirmed with name:', folderName);
+    console.log('✅ Creating folder...');
+    
+    // Crear la carpeta
+    createNewFolder(folderName);
+    
+    // Cerrar modal
+    setShowFolderModal(false);
+    
+    // Mensaje de éxito
+    Alert.alert('✅ Carpeta Creada', `"${folderName}" se creó correctamente.`);
   };
 
   const handleRefresh = () => {
@@ -233,6 +228,27 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
         
         {renderSidebarContent()}
       </Animated.View>
+
+      {/* Modales de input */}
+      <InputModal
+        visible={showFileModal}
+        title="Nuevo Archivo"
+        message="Ingresa el nombre del archivo (con extensión):"
+        placeholder="mi-archivo.js"
+        defaultValue="mi-archivo.js"
+        onConfirm={handleFileModalConfirm}
+        onCancel={() => setShowFileModal(false)}
+      />
+
+      <InputModal
+        visible={showFolderModal}
+        title="Nueva Carpeta"
+        message="Ingresa el nombre de la carpeta:"
+        placeholder="mi-carpeta"
+        defaultValue="mi-carpeta"
+        onConfirm={handleFolderModalConfirm}
+        onCancel={() => setShowFolderModal(false)}
+      />
     </View>
   );
 };
