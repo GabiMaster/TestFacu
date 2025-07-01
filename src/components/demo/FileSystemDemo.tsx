@@ -1,6 +1,9 @@
-import { COLOR } from '@/src/constants/colors';
+import { Icon } from '@/src/constants/icons';
+import { getColorsByTheme } from '@/src/constants/themeColors';
 import { useFileSystemInitializer } from '@/src/hooks/fileSystem/useFileSystemInitializer';
 import { useSidebar } from '@/src/hooks/sidebar/useSidebar';
+import { useTheme } from '@/src/utils/contexts/ThemeContext';
+import { useRouter } from 'expo-router';
 import React from 'react';
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -15,6 +18,10 @@ export const FileSystemDemo: React.FC = () => {
   } = useSidebar();
   
   const { initializeWithSampleFiles, isInitializing } = useFileSystemInitializer();
+  const { theme } = useTheme();
+  const router = useRouter();
+  const COLOR = getColorsByTheme(theme);
+  const styles = getStyles(COLOR);
 
   const handleCreateFile = () => {
     Alert.prompt(
@@ -76,6 +83,10 @@ export const FileSystemDemo: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      <TouchableOpacity style={styles.rollbackButton} onPress={() => router.replace('/(tabs)/settings')}>
+        <Icon name="arrow-left" size={22} color={COLOR.icon} />
+      </TouchableOpacity>
+      <View style={{ height: 80 }} />
       <Text style={styles.title}>🗂️ Sistema de Archivos Demo</Text>
       
       <View style={styles.statsContainer}>
@@ -145,81 +156,96 @@ export const FileSystemDemo: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: COLOR.background,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: COLOR.textPrimary,
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 20,
-    padding: 15,
-    backgroundColor: COLOR.surface,
-    borderRadius: 10,
-  },
-  statsText: {
-    fontSize: 16,
-    color: COLOR.textSecondary,
-    fontWeight: '600',
-  },
-  selectedFile: {
-    padding: 10,
-    backgroundColor: COLOR.primary,
-    borderRadius: 8,
-    marginBottom: 15,
-  },
-  selectedText: {
-    color: 'white',
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-  buttonContainer: {
-    gap: 15,
-    marginBottom: 20,
-  },
-  button: {
-    backgroundColor: COLOR.primary,
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  buttonDisabled: {
-    backgroundColor: COLOR.disabled,
-  },
-  buttonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  buttonTextDisabled: {
-    color: COLOR.textSecondary,
-  },
-  initButton: {
-    backgroundColor: COLOR.success,
-  },
-  infoContainer: {
-    backgroundColor: COLOR.surface,
-    padding: 15,
-    borderRadius: 10,
-  },
-  infoTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: COLOR.textPrimary,
-    marginBottom: 10,
-  },
-  infoText: {
-    fontSize: 14,
-    color: COLOR.textSecondary,
-    marginBottom: 5,
-  },
-});
+function getStyles(COLOR: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      padding: 20,
+      backgroundColor: COLOR.background,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      color: COLOR.textPrimary,
+      textAlign: 'center',
+      marginBottom: 20,
+    },
+    statsContainer: {
+      flexDirection: 'row',
+      justifyContent: 'space-around',
+      marginBottom: 20,
+      padding: 15,
+      backgroundColor: COLOR.surface,
+      borderRadius: 10,
+    },
+    statsText: {
+      fontSize: 16,
+      color: COLOR.textSecondary,
+      fontWeight: '600',
+    },
+    selectedFile: {
+      padding: 10,
+      backgroundColor: COLOR.primary,
+      borderRadius: 8,
+      marginBottom: 15,
+    },
+    selectedText: {
+      color: 'white',
+      fontWeight: '600',
+      textAlign: 'center',
+    },
+    buttonContainer: {
+      gap: 15,
+      marginBottom: 20,
+    },
+    button: {
+      backgroundColor: COLOR.primary,
+      padding: 15,
+      borderRadius: 10,
+      alignItems: 'center',
+    },
+    buttonDisabled: {
+      backgroundColor: COLOR.disabled,
+    },
+    buttonText: {
+      color: 'white',
+      fontSize: 16,
+      fontWeight: '600',
+    },
+    buttonTextDisabled: {
+      color: COLOR.textSecondary,
+    },
+    initButton: {
+      backgroundColor: COLOR.success,
+    },
+    infoContainer: {
+      backgroundColor: COLOR.surface,
+      padding: 15,
+      borderRadius: 10,
+    },
+    infoTitle: {
+      fontSize: 18,
+      fontWeight: 'bold',
+      color: COLOR.textPrimary,
+      marginBottom: 10,
+    },
+    infoText: {
+      fontSize: 14,
+      color: COLOR.textSecondary,
+      marginBottom: 5,
+    },
+    rollbackButton: {
+      position: 'absolute',
+      top: 32,
+      left: 20,
+      backgroundColor: COLOR.surfaceLight,
+      borderRadius: 32,
+      width: 56,
+      height: 56,
+      justifyContent: 'center',
+      alignItems: 'center',
+      elevation: 4,
+      zIndex: 10,
+    },
+  });
+}

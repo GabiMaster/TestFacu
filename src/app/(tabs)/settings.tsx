@@ -1,15 +1,19 @@
-import { COLOR } from '@/src/constants/colors';
 import { Icon } from '@/src/constants/icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
+import { getColorsByTheme } from '../../constants/themeColors';
 import { useLanguage } from '../../utils/contexts/LanguageContext';
+import { useTheme } from '../../utils/contexts/ThemeContext';
 
 const Settings = () => {
   const [biometricEnabled, setBiometricEnabled] = useState(false);
   const router = useRouter();
   const { language } = useLanguage();
+  const { theme, toggleTheme } = useTheme();
+  const COLOR = getColorsByTheme(theme);
+  const styles = getStyles(COLOR);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -79,63 +83,79 @@ const Settings = () => {
               trackColor={{ false: COLOR.surfaceLight, true: COLOR.primary + '55' }}
             />
           </View>
+          {/* Botón de tema */}
+          <View style={[styles.itemRow, { justifyContent: 'space-between' }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={styles.itemText}>Tema</Text>
+            </View>
+            <TouchableOpacity onPress={toggleTheme} style={{ padding: 4 }}>
+              <Icon
+                name={theme === 'dark' ? 'moon-waning-crescent' : 'white-balance-sunny'}
+                size={28}
+                color={theme === 'dark' ? COLOR.icon : '#FFD600'}
+              />
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLOR.background,
-    paddingHorizontal: moderateScale(20),
-    paddingTop: verticalScale(16),
-  },
-  header: {
-    paddingTop: verticalScale(32),
-    marginBottom: verticalScale(18),
-  },
-  headerTitle: {
-    color: COLOR.textPrimary,
-    fontSize: moderateScale(20),
-    fontWeight: 'bold',
-  },
-  sectionTitle: {
-    color: COLOR.textSecondary,
-    fontSize: moderateScale(15),
-    marginTop: verticalScale(18),
-    marginBottom: verticalScale(8),
-    fontWeight: 'bold',
-  },
-  sectionBox: {
-    backgroundColor: COLOR.surface,
-    borderRadius: moderateScale(12),
-    paddingVertical: verticalScale(8),
-    marginBottom: verticalScale(8),
-    gap: verticalScale(2),
-  },
-  itemRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: scale(12),
-    paddingVertical: verticalScale(12),
-    paddingHorizontal: moderateScale(14),
-  },
-  itemText: {
-    color: COLOR.textPrimary,
-    fontSize: moderateScale(16),
-  },
-  languageLabel: {
-    marginLeft: 'auto',
-    color: COLOR.primary,
-    fontWeight: 'bold',
-    fontSize: moderateScale(13),
-    backgroundColor: COLOR.surfaceLight,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 2,
-  },
-});
+// Cambiar a función para recibir COLOR dinámico
+function getStyles(COLOR: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: COLOR.background,
+      paddingHorizontal: moderateScale(20),
+      paddingTop: verticalScale(16),
+    },
+    header: {
+      paddingTop: verticalScale(32),
+      marginBottom: verticalScale(18),
+    },
+    headerTitle: {
+      color: COLOR.textPrimary,
+      fontSize: moderateScale(20),
+      fontWeight: 'bold',
+    },
+    sectionTitle: {
+      color: COLOR.textSecondary,
+      fontSize: moderateScale(15),
+      marginTop: verticalScale(18),
+      marginBottom: verticalScale(8),
+      fontWeight: 'bold',
+    },
+    sectionBox: {
+      backgroundColor: COLOR.surface,
+      borderRadius: moderateScale(12),
+      paddingVertical: verticalScale(8),
+      marginBottom: verticalScale(8),
+      gap: verticalScale(2),
+    },
+    itemRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: scale(12),
+      paddingVertical: verticalScale(12),
+      paddingHorizontal: moderateScale(14),
+    },
+    itemText: {
+      color: COLOR.textPrimary,
+      fontSize: moderateScale(16),
+    },
+    languageLabel: {
+      marginLeft: 'auto',
+      color: COLOR.primary,
+      fontWeight: 'bold',
+      fontSize: moderateScale(13),
+      backgroundColor: COLOR.surfaceLight,
+      borderRadius: 8,
+      paddingHorizontal: 10,
+      paddingVertical: 2,
+    },
+  });
+}
 
 export default Settings;

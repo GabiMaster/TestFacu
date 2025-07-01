@@ -5,8 +5,9 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { moderateScale, verticalScale } from 'react-native-size-matters';
-import { COLOR } from '../../constants/colors';
 import { Icon } from '../../constants/icons';
+import { getColorsByTheme } from '../../constants/themeColors';
+import { useTheme } from '../../utils/contexts/ThemeContext';
 
 const CambiarContrasena = () => {
   const [current, setCurrent] = useState('');
@@ -19,6 +20,9 @@ const CambiarContrasena = () => {
   const [alert, setAlert] = useState<{visible: boolean, type: 'success' | 'error', message: string}>({visible: false, type: 'success', message: ''});
   const router = useRouter();
   const { user, updateUser } = useAuth();
+  const { theme } = useTheme();
+  const COLOR = getColorsByTheme(theme);
+  const styles = getStyles(COLOR);
 
   const handleChange = async () => {
     if (!current || !newPass || !repeat) {
@@ -115,68 +119,70 @@ const CambiarContrasena = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLOR.background,
-    paddingHorizontal: moderateScale(20),
-    paddingTop: verticalScale(16),
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: verticalScale(18),
-    paddingTop: verticalScale(32), 
-  },
-  backButton: {
-    marginRight: moderateScale(12),
-    backgroundColor: COLOR.surface,
-    borderRadius: moderateScale(20),
-    width: moderateScale(40),
-    height: moderateScale(40),
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    color: COLOR.textPrimary,
-    fontSize: moderateScale(20),
-    fontWeight: 'bold',
-  },
-  body: {
-    marginTop: verticalScale(12),
-  },
-  label: {
-    color: COLOR.textSecondary,
-    fontSize: moderateScale(14),
-    marginBottom: 4,
-    marginTop: verticalScale(12),
-  },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: COLOR.surface,
-    borderRadius: moderateScale(8),
-    paddingHorizontal: moderateScale(12),
-    marginBottom: verticalScale(8),
-  },
-  input: {
-    flex: 1,
-    color: COLOR.textPrimary,
-    fontSize: moderateScale(16),
-    paddingVertical: verticalScale(10),
-  },
-  saveButton: {
-    backgroundColor: COLOR.primary,
-    borderRadius: moderateScale(8),
-    paddingVertical: verticalScale(12),
-    alignItems: 'center',
-    marginTop: verticalScale(24),
-  },
-  saveButtonText: {
-    color: COLOR.textPrimary,
-    fontWeight: 'bold',
-    fontSize: moderateScale(16),
-  },
-});
+function getStyles(COLOR: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: COLOR.background,
+      paddingHorizontal: moderateScale(20),
+      paddingTop: verticalScale(16),
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: verticalScale(18),
+      paddingTop: verticalScale(32), 
+    },
+    backButton: {
+      marginRight: moderateScale(12),
+      backgroundColor: COLOR.surface,
+      borderRadius: moderateScale(20),
+      width: moderateScale(40),
+      height: moderateScale(40),
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    headerTitle: {
+      color: COLOR.textPrimary,
+      fontSize: moderateScale(20),
+      fontWeight: 'bold',
+    },
+    body: {
+      marginTop: verticalScale(12),
+    },
+    label: {
+      color: COLOR.textSecondary,
+      fontSize: moderateScale(14),
+      marginBottom: 4,
+      marginTop: verticalScale(12),
+    },
+    inputRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: COLOR.surface,
+      borderRadius: moderateScale(8),
+      paddingHorizontal: moderateScale(12),
+      marginBottom: verticalScale(8),
+    },
+    input: {
+      flex: 1,
+      color: COLOR.textPrimary,
+      fontSize: moderateScale(16),
+      paddingVertical: verticalScale(10),
+    },
+    saveButton: {
+      backgroundColor: COLOR.primary,
+      borderRadius: moderateScale(8),
+      paddingVertical: verticalScale(12),
+      alignItems: 'center',
+      marginTop: verticalScale(24),
+    },
+    saveButtonText: {
+      color: COLOR.textPrimary,
+      fontWeight: 'bold',
+      fontSize: moderateScale(16),
+    },
+  });
+}
 
 export default CambiarContrasena;

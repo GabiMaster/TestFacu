@@ -1,10 +1,11 @@
-import { COLOR } from '@/src/constants/colors';
 import { Icon } from '@/src/constants/icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { FlatList, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { moderateScale, verticalScale } from 'react-native-size-matters';
+import { getColorsByTheme } from '../../constants/themeColors';
 import { useLanguage } from '../../utils/contexts/LanguageContext';
+import { useTheme } from '../../utils/contexts/ThemeContext';
 
 const LANGUAGES = [
   { code: 'en', label: 'Inglés' },
@@ -21,6 +22,8 @@ const LanguageSelector = () => {
   const router = useRouter();
   const { language, setLanguage } = useLanguage();
   const [selected, setSelected] = useState(language);
+  const { theme } = useTheme();
+  const COLOR = getColorsByTheme(theme);
 
   const handleSelect = (code: string) => {
     setSelected(code as any);
@@ -29,12 +32,12 @@ const LanguageSelector = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => router.replace('/(tabs)/settings')}>
+    <SafeAreaView style={getStyles(COLOR).container}>
+      <View style={getStyles(COLOR).header}>
+        <TouchableOpacity style={getStyles(COLOR).backButton} onPress={() => router.replace('/(tabs)/settings')}>
           <Icon name="arrow-left" size={22} color={COLOR.icon} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Seleccionar idioma</Text>
+        <Text style={getStyles(COLOR).headerTitle}>Seleccionar idioma</Text>
       </View>
       <FlatList
         data={LANGUAGES}
@@ -43,13 +46,13 @@ const LanguageSelector = () => {
         renderItem={({ item }) => (
           <TouchableOpacity
             style={[
-              styles.languageRow,
-              selected === item.code && styles.selectedRow,
+              getStyles(COLOR).languageRow,
+              selected === item.code && getStyles(COLOR).selectedRow,
             ]}
             onPress={() => handleSelect(item.code)}
             activeOpacity={0.7}
           >
-            <Text style={styles.languageText}>{item.label}</Text>
+            <Text style={getStyles(COLOR).languageText}>{item.label}</Text>
             {selected === item.code && (
               <Icon name="check-circle" size={24} color={COLOR.primary} />
             )}
@@ -60,54 +63,56 @@ const LanguageSelector = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLOR.background,
-    paddingHorizontal: moderateScale(20),
-    paddingTop: verticalScale(16),
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: verticalScale(18),
-    paddingTop: verticalScale(32)
-  },
-  backButton: {
-    marginRight: moderateScale(12),
-    backgroundColor: COLOR.surface,
-    borderRadius: moderateScale(20),
-    width: moderateScale(40),
-    height: moderateScale(40),
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  headerTitle: {
-    color: COLOR.textPrimary,
-    fontSize: moderateScale(20),
-    fontWeight: 'bold',
-  },
-  languageRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: COLOR.surface,
-    borderRadius: moderateScale(10),
-    paddingVertical: verticalScale(16),
-    paddingHorizontal: moderateScale(18),
-    marginBottom: verticalScale(10),
-    elevation: 1,
-  },
-  selectedRow: {
-    borderWidth: 2,
-    borderColor: COLOR.primary,
-    backgroundColor: COLOR.surfaceLight,
-  },
-  languageText: {
-    color: COLOR.textPrimary,
-    fontSize: moderateScale(16),
-    fontWeight: '500',
-  },
-});
+function getStyles(COLOR: any) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: COLOR.background,
+      paddingHorizontal: moderateScale(20),
+      paddingTop: verticalScale(16),
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: verticalScale(18),
+      paddingTop: verticalScale(32)
+    },
+    backButton: {
+      marginRight: moderateScale(12),
+      backgroundColor: COLOR.surface,
+      borderRadius: moderateScale(20),
+      width: moderateScale(40),
+      height: moderateScale(40),
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    headerTitle: {
+      color: COLOR.textPrimary,
+      fontSize: moderateScale(20),
+      fontWeight: 'bold',
+    },
+    languageRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: COLOR.surface,
+      borderRadius: moderateScale(10),
+      paddingVertical: verticalScale(16),
+      paddingHorizontal: moderateScale(18),
+      marginBottom: verticalScale(10),
+      elevation: 1,
+    },
+    selectedRow: {
+      borderWidth: 2,
+      borderColor: COLOR.primary,
+      backgroundColor: COLOR.surfaceLight,
+    },
+    languageText: {
+      color: COLOR.textPrimary,
+      fontSize: moderateScale(16),
+      fontWeight: '500',
+    },
+  });
+}
 
 export default LanguageSelector;

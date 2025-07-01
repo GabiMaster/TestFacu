@@ -5,9 +5,10 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Image, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { moderateScale, verticalScale } from 'react-native-size-matters';
-import { COLOR } from '../../constants/colors';
 import { Icon } from '../../constants/icons';
+import { getColorsByTheme } from '../../constants/themeColors';
 import { useAuth } from '../../hooks/useAuth';
+import { useTheme } from '../../utils/contexts/ThemeContext';
 
 const EditPersonalInfo = () => {
   const { user, updateUser } = useAuth();
@@ -18,6 +19,9 @@ const EditPersonalInfo = () => {
   const [image, setImage] = useState(user?.image || null);
   const [loading, setLoading] = useState(false);
   const [alert, setAlert] = useState<{visible: boolean, type: 'success' | 'error', message: string}>({visible: false, type: 'success', message: ''});
+  const { theme } = useTheme();
+  const COLOR = getColorsByTheme(theme);
+  const styles = getStyles(COLOR);
 
   const requestPermission = async (type: 'camera' | 'media') => {
     let status;
@@ -169,7 +173,7 @@ const EditPersonalInfo = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (COLOR: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLOR.background,
