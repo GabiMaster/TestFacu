@@ -129,11 +129,6 @@ const Home = () => {
             <Text style={getStyles(COLOR).usernameText}>{user?.nombre && user?.apellido ? user.nombre + ' ' + user.apellido : user?.nombre || user?.username || 'Usuario'}</Text>
           </View>
         </View>
-        <TouchableOpacity style={getStyles(COLOR).headerRight}>
-          <View style={getStyles(COLOR).searchCircle}>
-            <Icon name="magnify" size={moderateScale(22)} color={COLOR.icon} />
-          </View>
-        </TouchableOpacity>
       </View>
 
       {/* Body con Scroll */}
