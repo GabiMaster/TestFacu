@@ -17,6 +17,12 @@ export const useSidebar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentView, setCurrentView] = useState<SidebarView>('files');
   const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
+  const [currentFolder, setCurrentFolder] = useState<FileItem | null>(null); // Carpeta actual
+
+  // Log cuando cambie currentFolder
+  useEffect(() => {
+    console.log('🔧 useSidebar: currentFolder changed to:', currentFolder?.name || 'null');
+  }, [currentFolder]);
   const [files, setFiles] = useState<FileItem[]>(
     [
       {
@@ -299,11 +305,13 @@ export const useSidebar = () => {
     currentView,
     files,
     selectedFile,
+    currentFolder,
     toggleSidebar,
     closeSidebar,
     openSidebar,
     changeView,
     selectFile,
+    setCurrentFolder,
     toggleFolder,
     createNewFile,
     createNewFolder,

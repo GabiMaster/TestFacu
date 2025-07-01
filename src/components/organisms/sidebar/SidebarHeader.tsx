@@ -1,5 +1,6 @@
 import { COLOR } from '@/src/constants/colors';
 import { Icon } from '@/src/constants/icons';
+import { FileItem } from '@/src/hooks/sidebar/useSidebar';
 import { useSidebarContext } from '@/src/utils/contexts/SidebarContext';
 import React from 'react';
 import {
@@ -15,13 +16,17 @@ interface SidebarHeaderProps {
   onNewFile: () => void;
   onNewFolder: () => void;
   onRefresh: () => void;
+  currentFolder?: FileItem | null;
+  onClearCurrentFolder?: () => void;
 }
 
 export const SidebarHeader: React.FC<SidebarHeaderProps> = ({
   onClose,
   onNewFile,
   onNewFolder,
-  onRefresh
+  onRefresh,
+  currentFolder,
+  onClearCurrentFolder
 }) => {
   const { currentView, changeView } = useSidebarContext();
 
@@ -79,6 +84,18 @@ export const SidebarHeader: React.FC<SidebarHeaderProps> = ({
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <Text style={styles.headerTitle}>ARCHIVOS</Text>
+            {currentFolder && (
+              <TouchableOpacity 
+                style={styles.currentFolderBadge}
+                onPress={onClearCurrentFolder}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.headerSubtitle}>
+                  📁 {currentFolder.name}
+                </Text>
+                <Icon name="close-circle" size={moderateScale(14)} color={COLOR.primary} />
+              </TouchableOpacity>
+            )}
           </View>
           
           <View style={styles.headerRight}>
@@ -187,6 +204,22 @@ const styles = StyleSheet.create({
     fontSize: moderateScale(12),
     fontWeight: 'bold',
     letterSpacing: 0.5,
+  },
+  headerSubtitle: {
+    color: COLOR.primary,
+    fontSize: moderateScale(10),
+    fontWeight: '500',
+    marginTop: verticalScale(2),
+  },
+  currentFolderBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: COLOR.primary + '15',
+    paddingHorizontal: moderateScale(8),
+    paddingVertical: verticalScale(4),
+    borderRadius: moderateScale(6),
+    marginTop: verticalScale(4),
+    gap: scale(4),
   },
   headerRight: {
     flexDirection: 'row',

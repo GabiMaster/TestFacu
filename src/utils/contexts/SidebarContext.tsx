@@ -6,12 +6,14 @@ interface SidebarContextType {
   currentView: SidebarView;
   files: FileItem[];
   selectedFile: FileItem | null;
+  currentFolder: FileItem | null; // Carpeta actual donde se crearán nuevos archivos
   toggleSidebar: () => void;
   closeSidebar: () => void;
   openSidebar: () => void;
   changeView: (view: SidebarView) => void;
   selectFile: (file: FileItem) => void;
   toggleFolder: (folderId: string) => void;
+  setCurrentFolder: (folder: FileItem | null) => void; // Establecer carpeta actual
   createNewFile: (name: string, parentPath?: string) => void;
   createNewFolder: (name: string, parentPath?: string) => void;
   deleteFile: (fileId: string) => void;

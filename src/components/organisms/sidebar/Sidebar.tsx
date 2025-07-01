@@ -32,8 +32,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
     currentView,
     files,
     selectedFile,
+    currentFolder,
     closeSidebar,
     selectFile,
+    setCurrentFolder,
     toggleFolder,
     createNewFile,
     createNewFolder
@@ -89,10 +91,12 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
 
   const handleFileModalConfirm = (fileName: string) => {
     console.log('🎯 File modal confirmed with name:', fileName);
+    console.log('📁 Current folder:', currentFolder?.name || 'Root');
     console.log('✅ Creating file...');
     
-    // Crear el archivo
-    createNewFile(fileName);
+    // Crear el archivo en la carpeta actual
+    const parentPath = currentFolder?.path;
+    createNewFile(fileName, parentPath);
     
     // Cerrar modal y sidebar
     setShowFileModal(false);
@@ -102,23 +106,27 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
     router.push('/(editor)/editor');
     
     // Mensaje de éxito
+    const location = currentFolder ? `en "${currentFolder.name}"` : 'en la raíz';
     setTimeout(() => {
-      Alert.alert('✅ Archivo Creado', `"${fileName}" se creó correctamente y está listo para editar.`);
+      Alert.alert('✅ Archivo Creado', `"${fileName}" se creó correctamente ${location} y está listo para editar.`);
     }, 500);
   };
 
   const handleFolderModalConfirm = (folderName: string) => {
     console.log('🎯 Folder modal confirmed with name:', folderName);
+    console.log('📁 Current folder:', currentFolder?.name || 'Root');
     console.log('✅ Creating folder...');
     
-    // Crear la carpeta
-    createNewFolder(folderName);
+    // Crear la carpeta en la carpeta actual
+    const parentPath = currentFolder?.path;
+    createNewFolder(folderName, parentPath);
     
     // Cerrar modal
     setShowFolderModal(false);
     
     // Mensaje de éxito
-    Alert.alert('✅ Carpeta Creada', `"${folderName}" se creó correctamente.`);
+    const location = currentFolder ? `en "${currentFolder.name}"` : 'en la raíz';
+    Alert.alert('✅ Carpeta Creada', `"${folderName}" se creó correctamente ${location}.`);
   };
 
   const handleRefresh = () => {
@@ -135,6 +143,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
 
   // Renderizar contenido según la vista actual
   const renderSidebarContent = () => {
+    console.log('🔧 Sidebar: renderSidebarContent called with currentView:', currentView);
     switch (currentView) {
       case 'home':
         return <SidebarHomeView onClose={closeSidebar} />;
@@ -145,8 +154,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
             <SidebarBody
               files={files}
               selectedFile={selectedFile}
+              currentFolder={currentFolder}
               onSelectFile={selectFile}
               onToggleFolder={toggleFolder}
+              onSetCurrentFolder={setCurrentFolder}
             />
             <SidebarFooter
               fileCount={getTotalFileCount()}
@@ -176,12 +187,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
         );
       
       default:
+        console.log('🔧 Sidebar: Passing setCurrentFolder to SidebarBody:', typeof setCurrentFolder);
         return (
           <SidebarBody
             files={files}
             selectedFile={selectedFile}
+            currentFolder={currentFolder}
             onSelectFile={selectFile}
             onToggleFolder={toggleFolder}
+            onSetCurrentFolder={setCurrentFolder}
           />
         );
     }
@@ -224,6 +238,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
           onNewFile={handleNewFile}
           onNewFolder={handleNewFolder}
           onRefresh={handleRefresh}
+          currentFolder={currentFolder}
+          onClearCurrentFolder={() => setCurrentFolder(null)}
         />
         
         {renderSidebarContent()}

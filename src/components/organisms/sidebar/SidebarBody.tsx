@@ -12,25 +12,33 @@ import { verticalScale } from 'react-native-size-matters';
 interface SidebarBodyProps {
   files: FileItemType[];
   selectedFile: FileItemType | null;
+  currentFolder: FileItemType | null;
   onSelectFile: (file: FileItemType) => void;
   onToggleFolder: (folderId: string) => void;
+  onSetCurrentFolder: (folder: FileItemType | null) => void;
 }
 
 export const SidebarBody: React.FC<SidebarBodyProps> = ({
   files,
   selectedFile,
+  currentFolder,
   onSelectFile,
-  onToggleFolder
+  onToggleFolder,
+  onSetCurrentFolder
 }) => {
+  console.log('🔧 SidebarBody: Received onSetCurrentFolder:', typeof onSetCurrentFolder);
+
   const renderFileTree = (items: FileItemType[], depth = 0): React.ReactNode => {
     return items.map(file => (
       <View key={file.id}>
         <FileItem
           file={file}
           isSelected={selectedFile?.id === file.id}
+          isCurrentFolder={currentFolder?.id === file.id}
           depth={depth}
           onSelect={onSelectFile}
           onToggleFolder={onToggleFolder}
+          onSetCurrentFolder={onSetCurrentFolder}
         />
         
         {/* Renderizar hijos si es una carpeta abierta */}

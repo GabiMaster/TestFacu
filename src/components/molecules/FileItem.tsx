@@ -16,18 +16,22 @@ import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
 interface FileItemProps {
   file: FileItemType;
   isSelected: boolean;
+  isCurrentFolder?: boolean;
   depth?: number;
   onSelect: (file: FileItemType) => void;
   onToggleFolder?: (folderId: string) => void;
+  onSetCurrentFolder?: (folder: FileItemType | null) => void;
   onShowOptions?: (file: FileItemType) => void;
 }
 
 export const FileItem: React.FC<FileItemProps> = ({
   file,
   isSelected,
+  isCurrentFolder = false,
   depth = 0,
   onSelect,
   onToggleFolder,
+  onSetCurrentFolder,
   onShowOptions
 }) => {
   const handlePress = () => {
@@ -41,8 +45,33 @@ export const FileItem: React.FC<FileItemProps> = ({
   };
 
   const handleLongPress = () => {
-    if (onShowOptions) {
+    console.log('🔥 Long press detected on:', file.name, 'type:', file.type);
+    console.log('🔥 onSetCurrentFolder available:', !!onSetCurrentFolder);
+    console.log('🔥 onSetCurrentFolder type:', typeof onSetCurrentFolder);
+    console.log('🔥 isCurrentFolder:', isCurrentFolder);
+    
+    if (file.type === 'folder' && onSetCurrentFolder && typeof onSetCurrentFolder === 'function') {
+      console.log('✅ Processing folder long press');
+      try {
+        // Si ya es la carpeta actual, quitarla
+        if (isCurrentFolder) {
+          console.log('🔄 Clearing current folder');
+          onSetCurrentFolder(null);
+          Alert.alert('📂 Carpeta', 'Se quitó la selección de carpeta activa. Los nuevos archivos se crearán en la raíz.');
+        } else {
+          console.log('🎯 Setting as current folder');
+          // Establecer como carpeta actual
+          onSetCurrentFolder(file);
+          Alert.alert('📂 Carpeta activa', `"${file.name}" es ahora la carpeta activa. Los nuevos archivos se crearán aquí.`);
+        }
+      } catch (error) {
+        console.error('❌ Error calling onSetCurrentFolder:', error);
+      }
+    } else if (onShowOptions) {
+      console.log('📝 Showing options menu');
       onShowOptions(file);
+    } else {
+      console.log('❌ No action available for long press');
     }
   };
 
@@ -71,7 +100,8 @@ export const FileItem: React.FC<FileItemProps> = ({
       style={[
         styles.fileItem,
         { paddingLeft: moderateScale(16 + (depth * 12)) },
-        isSelected && styles.fileItemSelected
+        isSelected && styles.fileItemSelected,
+        isCurrentFolder && styles.fileItemCurrentFolder
       ]}
       onPress={handlePress}
       onLongPress={handleLongPress}
@@ -87,12 +117,20 @@ export const FileItem: React.FC<FileItemProps> = ({
         <Text 
           style={[
             styles.fileName,
-            isSelected && styles.fileNameSelected
+            isSelected && styles.fileNameSelected,
+            isCurrentFolder && styles.fileNameCurrentFolder
           ]}
           numberOfLines={1}
         >
           {file.name}
         </Text>
+        
+        {/* Indicador de carpeta actual */}
+        {isCurrentFolder && (
+          <View style={styles.currentFolderIndicator}>
+            <Icon name="target" size={moderateScale(12)} color={COLOR.primary} />
+          </View>
+        )}
       </View>
       
       <TouchableOpacity 
@@ -124,6 +162,11 @@ const styles = StyleSheet.create({
     borderLeftWidth: 2,
     borderLeftColor: COLOR.primary,
   },
+  fileItemCurrentFolder: {
+    backgroundColor: COLOR.primary + '10',
+    borderRightWidth: 3,
+    borderRightColor: COLOR.primary,
+  },
   fileContent: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -139,6 +182,16 @@ const styles = StyleSheet.create({
   fileNameSelected: {
     color: COLOR.primary,
     fontWeight: '500',
+  },
+  fileNameCurrentFolder: {
+    color: COLOR.primary,
+    fontWeight: '600',
+  },
+  currentFolderIndicator: {
+    marginLeft: scale(4),
+    padding: moderateScale(2),
+    borderRadius: moderateScale(4),
+    backgroundColor: COLOR.primary + '20',
   },
   optionsButton: {
     padding: moderateScale(4),
