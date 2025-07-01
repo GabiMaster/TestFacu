@@ -28,11 +28,13 @@ export const ConsolePanel: React.FC<ConsolePanelProps> = ({
 }) => {
   const [messages, setMessages] = useState<ConsoleMessage[]>([]);
   const scrollRef = useRef<ScrollView>(null);
+  const messageIdCounter = useRef(0);
 
   // Función para agregar mensaje a la consola
   const addMessage = (content: string, type: ConsoleMessage['type'] = 'output') => {
+    messageIdCounter.current += 1;
     const newMessage: ConsoleMessage = {
-      id: Date.now().toString(),
+      id: `msg-${messageIdCounter.current}-${Date.now()}`,
       type,
       content,
       timestamp: new Date(),
@@ -49,14 +51,16 @@ export const ConsolePanel: React.FC<ConsolePanelProps> = ({
   // Función para limpiar la consola
   const handleClear = () => {
     setMessages([]);
+    messageIdCounter.current = 0;
     onClear();
   };
 
   // Ejecutar código cuando se recibe código nuevo
   useEffect(() => {
     if (code && code.trim()) {
-      executeCode(code, language || 'JavaScript');
+      executeCode(code, language || 'Código');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [code, language]);
 
   // Simuladores de ejecución por lenguaje
@@ -75,13 +79,18 @@ export const ConsolePanel: React.FC<ConsolePanelProps> = ({
           await executeJava(codeToExecute);
           break;
         case 'Html':
+        case 'HTML':
           await executeHtml(codeToExecute);
           break;
         case 'MySQL':
+        case 'SQL':
           await executeMySQL(codeToExecute);
           break;
+        case 'Código':
         default:
-          addMessage('Lenguaje no soportado', 'error');
+          // Para lenguajes no reconocidos, intentar ejecutar como JavaScript
+          addMessage('Ejecutando código...', 'system');
+          await executeJavaScript(codeToExecute);
       }
     } catch (error) {
       addMessage(`Error: ${error}`, 'error');
@@ -158,22 +167,38 @@ export const ConsolePanel: React.FC<ConsolePanelProps> = ({
 
   // Simulador de ejecución de Java
   const executeJava = async (code: string) => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
     addMessage('Compilando...', 'system');
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise(resolve => setTimeout(resolve, 800));
+    addMessage('Compilación exitosa', 'system');
+    await new Promise(resolve => setTimeout(resolve, 300));
+    addMessage('Ejecutando...', 'system');
+    await new Promise(resolve => setTimeout(resolve, 200));
     
     if (code.includes('System.out.println')) {
-      const matches = code.match(/System\.out\.println\((.*?)\);/g);
+      const matches = code.match(/System\.out\.println\s*\(\s*([^)]+)\s*\)\s*;/g);
       if (matches) {
         for (const match of matches) {
-          const content = match.match(/System\.out\.println\((.*?)\);/)?.[1];
-          if (content) {
-            let output = content.replace(/"/g, '');
+          const contentMatch = match.match(/System\.out\.println\s*\(\s*([^)]+)\s*\)\s*;/);
+          if (contentMatch && contentMatch[1]) {
+            let output = contentMatch[1].trim();
             
+            // Remover comillas externas
+            output = output.replace(/^["']|["']$/g, '');
+            
+            // Manejar concatenación con +
             if (output.includes(' + ')) {
-              output = output.replace(/ \+ /g, '');
-              output = output.replace(/nombre/g, 'CodeFarm');
+              // Procesar concatenación simple como "Bienvenido a " + nombre
+              output = output.replace(/"([^"]*)" \+ ([a-zA-Z_][a-zA-Z0-9_]*)/g, (match, str, variable) => {
+                if (variable === 'nombre') return str + 'CodeFarm';
+                if (variable === 'i') return str + Math.floor(Math.random() * 3);
+                return str + variable;
+              });
+              
+              // Procesar concatenación con variables al inicio
+              output = output.replace(/([a-zA-Z_][a-zA-Z0-9_]*) \+ "([^"]*)"/g, (match, variable, str) => {
+                if (variable === 'nombre') return 'CodeFarm' + str;
+                return variable + str;
+              });
             }
             
             addMessage(output, 'output');
@@ -183,12 +208,21 @@ export const ConsolePanel: React.FC<ConsolePanelProps> = ({
       }
     }
     
+    // Procesar bucles for
     if (code.includes('for(int i')) {
-      for (let i = 0; i < 3; i++) {
-        addMessage(`Número: ${i}`, 'output');
-        await new Promise(resolve => setTimeout(resolve, 200));
+      const forLoopMatch = code.match(/for\s*\(\s*int\s+i\s*=\s*(\d+)\s*;\s*i\s*<\s*(\d+)\s*;\s*i\+\+\s*\)/);
+      if (forLoopMatch) {
+        const start = parseInt(forLoopMatch[1]);
+        const end = parseInt(forLoopMatch[2]);
+        
+        for (let i = start; i < end; i++) {
+          addMessage(`Número: ${i}`, 'output');
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
       }
     }
+    
+    addMessage('Programa terminado exitosamente', 'system');
   };
 
   // Simulador de ejecución de HTML

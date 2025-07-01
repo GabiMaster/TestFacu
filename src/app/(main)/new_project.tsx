@@ -6,16 +6,16 @@ import { useSidebarContext } from '@/src/utils/contexts/SidebarContext';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
 import {
-    Alert,
-    Image,
-    Modal,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  Alert,
+  Image,
+  Modal,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { moderateScale, verticalScale } from 'react-native-size-matters';
 import { getColorsByTheme } from '../../constants/themeColors';
@@ -95,8 +95,8 @@ const NewProject = () => {
         updateFiles(openedProject.fileStructure);
       }
       
-      // Navegar al editor
-      router.push('/(editor)/editor');
+      // Navegar al editor con el lenguaje seleccionado
+      router.push(`/(editor)/editor?language=${selectedLanguage.name}`);
       
     } catch (error) {
       console.error('❌ Error creating project:', error);
@@ -259,19 +259,19 @@ function getStyles(COLOR: any) {
       flex: 1,
       alignItems: 'center',
       justifyContent: 'center',
-      paddingBottom: verticalScale(180),
-      gap: verticalScale(16),
+      paddingBottom: verticalScale(80),
+      
     },
     welcomeTitle: {
       color: COLOR.textPrimary,
-      fontSize: moderateScale(36),
+      fontSize: moderateScale(24),
       fontWeight: 'bold',
       textAlign: 'center',
       marginBottom: verticalScale(24),
     },
     subtitle: {
       color: COLOR.textSecondary,
-      fontSize: moderateScale(24),
+      fontSize: moderateScale(16),
       textAlign: 'center',
       marginBottom: verticalScale(24),
     },

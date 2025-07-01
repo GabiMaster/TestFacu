@@ -27,6 +27,18 @@ export const useEditorFile = (selectedFile: FileItem | null) => {
         actualContent = getDefaultContentByFileName(file.name);
         // Guardar el contenido por defecto
         await FileSystemManager.saveFileContent(file.id, actualContent);
+      } else {
+        // Verificar si el contenido es correcto para el tipo de archivo
+        const extension = file.name.split('.').pop()?.toLowerCase();
+        const isJavaFile = extension === 'java';
+        const hasWrongContent = isJavaFile && fileContent.includes('def ') && fileContent.includes('print(');
+        
+        if (hasWrongContent) {
+          console.log('🔧 Corrigiendo contenido incorrecto para archivo Java:', file.name);
+          actualContent = getDefaultContentByFileName(file.name);
+          // Guardar el contenido corregido
+          await FileSystemManager.saveFileContent(file.id, actualContent);
+        }
       }
       
       setContent(actualContent);

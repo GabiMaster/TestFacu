@@ -76,7 +76,7 @@ export const CodeEditor = forwardRef<CodeEditorRef, CodeEditorProps>(({
   // Función para obtener el número de líneas basado en el código
   const getLineNumbers = () => {
     const lines = code.split('\n');
-    return lines.map((_, index) => index + 1);
+    return lines.map((_, index) => ({ lineNumber: index + 1, uniqueId: `line-${index + 1}` }));
   };
 
   return (
@@ -91,9 +91,9 @@ export const CodeEditor = forwardRef<CodeEditorRef, CodeEditorProps>(({
         <View style={styles.codeEditor}>
           {/* Números de línea */}
           <View style={styles.lineNumbers}>
-            {getLineNumbers().map((lineNumber) => (
-              <Text key={lineNumber} style={styles.lineNumber}>
-                {lineNumber}
+            {getLineNumbers().map((line) => (
+              <Text key={line.uniqueId} style={styles.lineNumber}>
+                {line.lineNumber}
               </Text>
             ))}
           </View>

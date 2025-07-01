@@ -159,6 +159,40 @@ if __name__ == "__main__":
         print(f"F({i}) = {calculate_fibonacci(i)}")
 `,
 
+  'java': `public class Main {
+    public static void main(String[] args) {
+        System.out.println("Hola Mundo");
+        String nombre = "CodeFarm";
+        System.out.println("Bienvenido a " + nombre);
+        for(int i = 0; i < 3; i++) {
+            System.out.println("Número: " + i);
+        }
+    }
+}
+`,
+
+  'sql': `-- SQL Query Example
+SELECT 
+    'Hola Mundo' as saludo,
+    'CodeFarm' as plataforma;
+
+-- Create a sample table
+CREATE TABLE usuarios (
+    id INT PRIMARY KEY,
+    nombre VARCHAR(50),
+    email VARCHAR(100)
+);
+
+-- Insert sample data
+INSERT INTO usuarios (id, nombre, email) VALUES
+(1, 'Juan', 'juan@email.com'),
+(2, 'Maria', 'maria@email.com'),
+(3, 'Carlos', 'carlos@email.com');
+
+-- Query the data
+SELECT * FROM usuarios;
+`,
+
   'tsx': `import React, { useState } from 'react';
 import { View, Text, Button, StyleSheet } from 'react-native';
 

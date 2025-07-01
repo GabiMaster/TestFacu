@@ -17,18 +17,78 @@ import { useEditorFile } from '@/src/hooks/editor/useEditorFile';
 
 // Utils
 import { COLOR } from '@/src/constants/colors';
-import { useProjectContext } from '@/src/utils/contexts/ProjectContext';
 import { useSidebarContext } from '@/src/utils/contexts/SidebarContext';
 import { CODE_TEMPLATES, getFileExtension } from '@/src/utils/editor/templates';
 
 const Editor = () => {
   const params = useLocalSearchParams<{ language?: string }>();
-  const language = params.language;
+  const urlLanguage = params.language;
   
   // Contexto del sidebar
-  const { openSidebar, selectedFile, files } = useSidebarContext();
-  const { currentProject, updateCurrentProjectFiles } = useProjectContext();
+  const { openSidebar, selectedFile } = useSidebarContext();
   
+  // Función para normalizar nombres de lenguajes
+  const normalizeLanguageName = (lang: string): string => {
+    const normalized = lang.toLowerCase();
+    switch (normalized) {
+      case 'javascript':
+      case 'js':
+        return 'JavaScript';
+      case 'python':
+      case 'py':
+        return 'Python';
+      case 'java':
+        return 'Java';
+      case 'html':
+      case 'htm':
+        return 'Html';
+      case 'css':
+        return 'CSS';
+      case 'mysql':
+      case 'sql':
+        return 'MySQL';
+      case 'typescript':
+      case 'ts':
+        return 'TypeScript';
+      default:
+        return lang;
+    }
+  };
+
+  // Función para detectar lenguaje basado en la extensión del archivo
+  const detectLanguageFromFile = (filename: string): string => {
+    const extension = filename.split('.').pop()?.toLowerCase();
+    
+    switch (extension) {
+      case 'js':
+      case 'jsx':
+        return 'JavaScript';
+      case 'py':
+        return 'Python';
+      case 'java':
+        return 'Java';
+      case 'html':
+      case 'htm':
+        return 'HTML';
+      case 'css':
+        return 'CSS';
+      case 'sql':
+        return 'MySQL';
+      case 'ts':
+      case 'tsx':
+        return 'TypeScript';
+      case 'cpp':
+      case 'c':
+        return 'C++';
+      default:
+        return 'Código';
+    }
+  };
+
+  // Determinar el lenguaje a usar
+  const detectedLanguage = urlLanguage || (selectedFile ? detectLanguageFromFile(selectedFile.name) : 'Código');
+  const language = normalizeLanguageName(detectedLanguage);
+
   // Hook para manejar archivos
   const {
     content: fileContent,
@@ -57,23 +117,41 @@ const Editor = () => {
   const codeEditorRef = useRef<CodeEditorRef>(null);
   const searchBarRef = useRef<SearchBarRef>(null);
   
-  // Referencia para evitar bucles infinitos
+  // Referencia para controlar la inicialización
   const isInitialized = useRef(false);
+  const lastLanguage = useRef<string>('');
 
   // Inicialización con template según el lenguaje
   useEffect(() => {
-    if (!isInitialized.current) {
-      if (language && CODE_TEMPLATES[language]) {
+    const shouldInitialize = !isInitialized.current || (language !== lastLanguage.current && language !== 'Código');
+    
+    if (shouldInitialize) {
+      // Si ya hay contenido del archivo, usarlo en lugar del template
+      if (fileContent && fileContent.trim() !== '') {
+        setCode(fileContent);
+        if (selectedFile) {
+          setFileName(selectedFile.name);
+        }
+        lastLanguage.current = language;
+      } else if (language && CODE_TEMPLATES[language]) {
         const template = CODE_TEMPLATES[language];
         setCode(template);
         setFileName(`main${getFileExtension(language)}`);
+        lastLanguage.current = language;
+      } else if (language === 'Código') {
+        // No hacer nada, esperar a que se seleccione un archivo o se pase un lenguaje válido
+        return;
       } else {
-        setCode('');
-        setFileName('untitled.txt');  
+        setCode(`// New File
+// Start coding here...
+
+console.log("Hello, World!");`);
+        setFileName('untitled.txt');
+        lastLanguage.current = language;
       }
       isInitialized.current = true;
     }
-  }, [language]);
+  }, [language, urlLanguage, selectedFile, detectedLanguage, fileContent]);
 
   // Efecto para sincronizar contenido del archivo con el estado del editor
   useEffect(() => {
@@ -93,9 +171,15 @@ const Editor = () => {
   const handleCodeChange = useCallback((newCode: string) => {
     setCode(newCode);
     updateContent(newCode); // Actualizar contenido del archivo
-    if (codeHistory.history[codeHistory.historyIndex] !== newCode) {
-      codeHistory.addToHistory(newCode);
-    }
+    
+    // Solo agregar al historial si no es una operación de undo/redo
+    codeHistory.addToHistory(newCode);
+    
+    // Reset del flag después de actualizar el código
+    setTimeout(() => {
+      codeHistory.resetUndoRedoFlag();
+    }, 0);
+    
     if (codeSearch.showSearch && codeSearch.searchText) {
       codeSearch.updateSearchMatches(newCode, codeSearch.searchText);
     }
@@ -148,44 +232,53 @@ const Editor = () => {
 
   // Handler de formateo de código
   const handleFormatCode = useCallback(() => {
-    let formatted = code;
-    
-    // Formateo básico universal
-    formatted = formatted
-      .split('\n')
-      .map(line => {
-        // Remover espacios al inicio y final
+    try {
+      const lines = code.split('\n');
+      let indentLevel = 0;
+      
+      const formattedLines = lines.map((line, index) => {
         const trimmed = line.trim();
+        
+        // Líneas vacías se mantienen vacías
         if (trimmed === '') return '';
         
-        // Detectar nivel de indentación basado en llaves, paréntesis, etc.
-        let indentLevel = 0;
-        const prevLines = code.split('\n').slice(0, code.split('\n').indexOf(line));
+        // Calcular nivel de indentación para esta línea
+        let currentIndent = indentLevel;
         
-        for (const prevLine of prevLines) {
-          const openBraces = (prevLine.match(/[{(\[]/g) || []).length;
-          const closeBraces = (prevLine.match(/[})\]]/g) || []).length;
-          indentLevel += openBraces - closeBraces;
+        // Si la línea empieza con }, ), ], reducir indentación
+        if (/^[}\]\)]/.test(trimmed)) {
+          currentIndent = Math.max(0, indentLevel - 1);
         }
         
-        // Ajustar indentación de línea actual
-        const currentCloseBraces = (trimmed.match(/^[})\]]/g) || []).length;
-        const actualIndent = Math.max(0, indentLevel - currentCloseBraces);
+        // Aplicar indentación
+        const indentedLine = '  '.repeat(currentIndent) + trimmed;
         
-        return '  '.repeat(actualIndent) + trimmed;
-      })
-      .join('\n');
-    
-    // Solo actualizar si hay cambios
-    if (formatted !== code) {
-      setCode(formatted);
-      codeHistory.addToHistory(formatted);
-      // Actualizar búsqueda si está activa
-      if (codeSearch.showSearch && codeSearch.searchText) {
-        codeSearch.updateSearchMatches(formatted, codeSearch.searchText);
+        // Actualizar nivel de indentación para la siguiente línea
+        const openBraces = (trimmed.match(/[{[\(]/g) || []).length;
+        const closeBraces = (trimmed.match(/[}]\)]/g) || []).length;
+        indentLevel += openBraces - closeBraces;
+        indentLevel = Math.max(0, indentLevel);
+        
+        return indentedLine;
+      });
+      
+      const formatted = formattedLines.join('\n');
+      
+      // Solo actualizar si hay cambios
+      if (formatted !== code) {
+        setCode(formatted);
+        codeHistory.addToHistory(formatted, true); // Forzar agregado al historial
+        updateContent(formatted);
+        
+        // Actualizar búsqueda si está activa
+        if (codeSearch.showSearch && codeSearch.searchText) {
+          codeSearch.updateSearchMatches(formatted, codeSearch.searchText);
+        }
       }
+    } catch (error) {
+      console.error('Error al formatear código:', error);
     }
-  }, [code, codeHistory, codeSearch]);
+  }, [code, codeHistory, codeSearch, updateContent]);
 
   // Handler para duplicar línea
   const handleDuplicateLine = useCallback(() => {
@@ -196,12 +289,14 @@ const Editor = () => {
     lines.splice(currentLineIndex + 1, 0, currentLine);
     const newCode = lines.join('\n');
     setCode(newCode);
-    codeHistory.addToHistory(newCode);
+    codeHistory.addToHistory(newCode, true); // Forzar agregado al historial
+    updateContent(newCode);
+    
     // Actualizar búsqueda si está activa
     if (codeSearch.showSearch && codeSearch.searchText) {
       codeSearch.updateSearchMatches(newCode, codeSearch.searchText);
     }
-  }, [code, cursorPosition, codeHistory, codeSearch]);
+  }, [code, cursorPosition, codeHistory, codeSearch, updateContent]);
 
   // Handler para comentar/descomentar
   const handleToggleComment = useCallback(() => {
@@ -217,12 +312,14 @@ const Editor = () => {
     
     const newCode = lines.join('\n');
     setCode(newCode);
-    codeHistory.addToHistory(newCode);
+    codeHistory.addToHistory(newCode, true); // Forzar agregado al historial
+    updateContent(newCode);
+    
     // Actualizar búsqueda si está activa
     if (codeSearch.showSearch && codeSearch.searchText) {
       codeSearch.updateSearchMatches(newCode, codeSearch.searchText);
     }
-  }, [code, cursorPosition, codeHistory, codeSearch]);
+  }, [code, cursorPosition, codeHistory, codeSearch, updateContent]);
 
   // Handlers de búsqueda
   const handleNavigateToMatch = useCallback((selection: { start: number; end: number }) => {
@@ -328,6 +425,7 @@ const Editor = () => {
             const undoCode = codeHistory.undo();
             if (undoCode !== null) {
               setCode(undoCode);
+              updateContent(undoCode);
               // Actualizar búsqueda si está activa
               if (codeSearch.showSearch && codeSearch.searchText) {
                 codeSearch.updateSearchMatches(undoCode, codeSearch.searchText);
@@ -338,6 +436,7 @@ const Editor = () => {
             const redoCode = codeHistory.redo();
             if (redoCode !== null) {
               setCode(redoCode);
+              updateContent(redoCode);
               // Actualizar búsqueda si está activa
               if (codeSearch.showSearch && codeSearch.searchText) {
                 codeSearch.updateSearchMatches(redoCode, codeSearch.searchText);
