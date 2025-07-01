@@ -1,6 +1,8 @@
 import { COLOR } from '@/src/constants/colors';
 import { Icon } from '@/src/constants/icons';
 import { useSidebarContext } from '@/src/utils/contexts/SidebarContext';
+import { FileSystemManager } from '@/src/utils/fileSystem/FileSystemManager';
+import { getDefaultContentByFileName } from '@/src/utils/fileSystem/defaultFileContents';
 import React, { useCallback, useState } from 'react';
 import {
   ScrollView,
@@ -34,115 +36,8 @@ export const SidebarSearchView: React.FC<SidebarSearchViewProps> = ({ onClose })
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
-  // Simular contenido de archivos (en una app real, esto vendría de un sistema de archivos)
-  const mockFileContents: Record<string, string> = {
-    '2': `// Game logic
-function startGame() {
-    console.log("Starting game...");
-    initializePlayer();
-    setupGameLoop();
-}
-
-function initializePlayer() {
-    player = {
-        x: 100,
-        y: 100,
-        health: 100
-    };
-}
-
-function setupGameLoop() {
-    setInterval(gameLoop, 16);
-}
-
-function gameLoop() {
-    updatePlayer();
-    renderGame();
-}`,
-    '3': `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Project</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
-    <div id="game-container">
-        <canvas id="game-canvas"></canvas>
-        <div id="ui-overlay">
-            <div id="health-bar"></div>
-            <div id="score">Score: 0</div>
-        </div>
-    </div>
-    <script src="game.js"></script>
-</body>
-</html>`,
-    '4': `# Game Project
-
-## Description
-This is a simple game project created with HTML5 Canvas and JavaScript.
-
-## Features
-- Player movement
-- Health system
-- Score tracking
-- Game loop optimization
-
-## How to run
-1. Open index.html in your browser
-2. Use arrow keys to move the player
-3. Enjoy the game!
-
-## Todo
-- Add sound effects
-- Implement power-ups
-- Create level system`,
-    '5': `/* Game Styles */
-body {
-    margin: 0;
-    padding: 0;
-    background-color: #000;
-    font-family: Arial, sans-serif;
-}
-
-#game-container {
-    position: relative;
-    width: 100vw;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-#game-canvas {
-    border: 2px solid #fff;
-    background-color: #001122;
-}
-
-#ui-overlay {
-    position: absolute;
-    top: 20px;
-    left: 20px;
-    color: white;
-}
-
-#health-bar {
-    width: 200px;
-    height: 20px;
-    background-color: #ff0000;
-    border: 2px solid #fff;
-    margin-bottom: 10px;
-}
-
-#score {
-    font-size: 18px;
-    font-weight: bold;
-}`
-  };
-
   // Función para buscar en todos los archivos
-  const searchInAllFiles = useCallback((query: string) => {
+  const searchInAllFiles = useCallback(async (query: string) => {
     if (!query.trim()) {
       setSearchResults([]);
       return;
@@ -150,52 +45,96 @@ body {
 
     setIsSearching(true);
     const results: SearchResult[] = [];
+    const lowerQuery = query.toLowerCase();
 
     // Función recursiva para buscar en archivos
-    const searchInFileTree = (items: typeof files) => {
-      items.forEach(item => {
-        if (item.type === 'file' && mockFileContents[item.id]) {
-          const content = mockFileContents[item.id];
-          const lines = content.split('\n');
-          const matches: SearchResult['matches'] = [];
-
-          lines.forEach((line, lineIndex) => {
-            const lowerLine = line.toLowerCase();
-            const lowerQuery = query.toLowerCase();
-            let searchIndex = 0;
-
-            while (true) {
-              const matchIndex = lowerLine.indexOf(lowerQuery, searchIndex);
-              if (matchIndex === -1) break;
-
+    const searchInFileTree = async (items: typeof files) => {
+      for (const item of items) {
+        if (item.type === 'file') {
+          try {
+            let matches: SearchResult['matches'] = [];
+            
+            // Buscar en el nombre del archivo
+            const fileName = item.name.toLowerCase();
+            if (fileName.includes(lowerQuery)) {
               matches.push({
-                lineNumber: lineIndex + 1,
-                lineContent: line.trim(),
-                matchStart: matchIndex,
-                matchEnd: matchIndex + query.length
+                lineNumber: 0, // 0 indica que es una coincidencia en el nombre del archivo
+                lineContent: `📄 ${item.name}`,
+                matchStart: fileName.indexOf(lowerQuery),
+                matchEnd: fileName.indexOf(lowerQuery) + query.length
               });
-
-              searchIndex = matchIndex + 1;
             }
-          });
 
-          if (matches.length > 0) {
-            results.push({
-              fileId: item.id,
-              fileName: item.name,
-              filePath: item.path,
-              matches
-            });
+            // Cargar el contenido real del archivo y buscar en el contenido
+            let content = await FileSystemManager.loadFileContent(item.id);
+            console.log(`🔍 Searching in file ${item.name} (ID: ${item.id}), content length: ${content?.length || 0}`);
+            
+            // Si no hay contenido guardado, usar contenido por defecto
+            if (!content || content.trim() === '') {
+              content = getDefaultContentByFileName(item.name);
+              console.log(`🔧 Using default content for ${item.name}, length: ${content.length}`);
+            }
+            
+            if (content && content.trim()) {
+              const lines = content.split('\n');
+
+              lines.forEach((line, lineIndex) => {
+                const lowerLine = line.toLowerCase();
+                let searchIndex = 0;
+
+                while (true) {
+                  const matchIndex = lowerLine.indexOf(lowerQuery, searchIndex);
+                  if (matchIndex === -1) break;
+
+                  matches.push({
+                    lineNumber: lineIndex + 1,
+                    lineContent: line.trim(),
+                    matchStart: matchIndex,
+                    matchEnd: matchIndex + query.length
+                  });
+
+                  searchIndex = matchIndex + 1;
+                }
+              });
+            }
+
+            // Si hay coincidencias, agregar el archivo a los resultados
+            if (matches.length > 0) {
+              results.push({
+                fileId: item.id,
+                fileName: item.name,
+                filePath: item.path,
+                matches
+              });
+            }
+          } catch (error) {
+            console.error(`Error loading content for file ${item.name}:`, error);
+            
+            // Si no se puede cargar el contenido, al menos buscar en el nombre
+            const fileName = item.name.toLowerCase();
+            if (fileName.includes(lowerQuery)) {
+              results.push({
+                fileId: item.id,
+                fileName: item.name,
+                filePath: item.path,
+                matches: [{
+                  lineNumber: 0,
+                  lineContent: `📄 ${item.name}`,
+                  matchStart: fileName.indexOf(lowerQuery),
+                  matchEnd: fileName.indexOf(lowerQuery) + query.length
+                }]
+              });
+            }
           }
         }
 
         if (item.children) {
-          searchInFileTree(item.children);
+          await searchInFileTree(item.children);
         }
-      });
+      }
     };
 
-    searchInFileTree(files);
+    await searchInFileTree(files);
     setSearchResults(results);
     setIsSearching(false);
   }, [files]);
@@ -336,10 +275,15 @@ body {
                   {result.matches.map((match, index) => (
                     <TouchableOpacity 
                       key={index}
-                      style={styles.resultLine}
+                      style={[
+                        styles.resultLine,
+                        match.lineNumber === 0 && styles.fileNameMatch
+                      ]}
                       onPress={() => handleSelectFile(result.fileId)}
                     >
-                      <Text style={styles.resultLineNumber}>{match.lineNumber}</Text>
+                      <Text style={styles.resultLineNumber}>
+                        {match.lineNumber === 0 ? '📄' : match.lineNumber}
+                      </Text>
                       {renderHighlightedLine(match.lineContent, match.matchStart, match.matchEnd)}
                     </TouchableOpacity>
                   ))}
@@ -476,6 +420,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: moderateScale(12),
     paddingVertical: verticalScale(4),
     gap: scale(12),
+  },
+  fileNameMatch: {
+    backgroundColor: COLOR.surfaceLight,
   },
   resultLineNumber: {
     color: COLOR.textSecondary,
