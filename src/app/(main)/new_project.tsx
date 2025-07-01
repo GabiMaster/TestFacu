@@ -115,7 +115,7 @@ const NewProject = () => {
         </TouchableOpacity>
         <Text style={getStyles(COLOR).headerTitle}>Nuevo Proyecto</Text>
         <TouchableOpacity style={getStyles(COLOR).headerIcon}>
-          <Icon name="dots-horizontal" size={moderateScale(22)} color={COLOR.icon} />
+          <Icon name="" size={moderateScale(22)} color={COLOR.icon} />
         </TouchableOpacity>
       </View>
 
@@ -246,7 +246,6 @@ function getStyles(COLOR: any) {
       width: moderateScale(38),
       height: moderateScale(38),
       borderRadius: moderateScale(19),
-      backgroundColor: COLOR.surface,
       justifyContent: 'center',
       alignItems: 'center',
     },

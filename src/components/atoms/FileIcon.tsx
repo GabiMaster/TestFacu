@@ -1,5 +1,6 @@
-import { COLOR } from '@/src/constants/colors';
+import { getColorsByTheme } from '@/src/constants/themeColors';
 import { Icon } from '@/src/constants/icons';
+import { useTheme } from '@/src/utils/contexts/ThemeContext';
 import React from 'react';
 import { moderateScale } from 'react-native-size-matters';
 
@@ -16,12 +17,15 @@ export const FileIcon: React.FC<FileIconProps> = ({
   isOpen = false, 
   size = moderateScale(16) 
 }) => {
+  const { theme } = useTheme();
+  const colors = getColorsByTheme(theme);
+
   if (type === 'folder') {
     return (
       <Icon 
         name={isOpen ? 'folder-open-outline' : 'folder-outline'} 
         size={size} 
-        color={COLOR.primary} 
+        color={colors.primary} 
       />
     );
   }
@@ -36,7 +40,7 @@ export const FileIcon: React.FC<FileIconProps> = ({
       case 'css':
         return { name: 'language-css3', color: '#1572B6' };
       case 'md':
-        return { name: 'language-markdown', color: COLOR.textSecondary };
+        return { name: 'language-markdown', color: colors.textSecondary };
       case 'json':
         return { name: 'code-json', color: '#FFA500' };
       case 'py':
@@ -44,7 +48,7 @@ export const FileIcon: React.FC<FileIconProps> = ({
       case 'java':
         return { name: 'language-java', color: '#ED8B00' };
       default:
-        return { name: 'file-document-outline', color: COLOR.textSecondary };
+        return { name: 'file-document-outline', color: colors.textSecondary };
     }
   };
 

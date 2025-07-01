@@ -39,6 +39,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
       alignItems: 'center',
       backgroundColor: COLOR.surface,
       paddingHorizontal: scale(16),
+      marginTop: verticalScale(34),
       borderBottomColor: COLOR.border,
       borderBottomWidth: 1,
       height: verticalScale(50),

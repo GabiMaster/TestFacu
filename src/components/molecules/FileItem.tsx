@@ -1,8 +1,9 @@
 import { FileIcon } from '@/src/components/atoms/FileIcon';
 import { FileContextMenu } from '@/src/components/molecules/FileContextMenu';
-import { COLOR } from '@/src/constants/colors';
+import { getColorsByTheme } from '@/src/constants/themeColors';
 import { Icon } from '@/src/constants/icons';
 import { FileItem as FileItemType } from '@/src/hooks/sidebar/useSidebar';
+import { useTheme } from '@/src/utils/contexts/ThemeContext';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -43,6 +44,8 @@ export const FileItem: React.FC<FileItemProps> = ({
   onRename,
   onDelete,
 }) => {
+  const { theme } = useTheme();
+  const colors = getColorsByTheme(theme);
   const [showContextMenuModal, setShowContextMenuModal] = useState(false);
 
   const handlePress = () => {
@@ -125,16 +128,16 @@ export const FileItem: React.FC<FileItemProps> = ({
   return (
     <TouchableOpacity
       style={[
-        styles.fileItem,
+        getStyles(colors).fileItem,
         { paddingLeft: moderateScale(16 + (depth * 12)) },
-        isSelected && styles.fileItemSelected,
-        isCurrentFolder && styles.fileItemCurrentFolder
+        isSelected && getStyles(colors).fileItemSelected,
+        isCurrentFolder && getStyles(colors).fileItemCurrentFolder
       ]}
       onPress={handlePress}
       onLongPress={handleLongPress}
       activeOpacity={0.7}
     >
-      <View style={styles.fileContent}>
+      <View style={getStyles(colors).fileContent}>
         <FileIcon 
           type={file.type}
           extension={file.extension}
@@ -143,9 +146,9 @@ export const FileItem: React.FC<FileItemProps> = ({
         />
         <Text 
           style={[
-            styles.fileName,
-            isSelected && styles.fileNameSelected,
-            isCurrentFolder && styles.fileNameCurrentFolder
+            getStyles(colors).fileName,
+            isSelected && getStyles(colors).fileNameSelected,
+            isCurrentFolder && getStyles(colors).fileNameCurrentFolder
           ]}
           numberOfLines={1}
         >
@@ -154,21 +157,21 @@ export const FileItem: React.FC<FileItemProps> = ({
         
         {/* Indicador de carpeta actual */}
         {isCurrentFolder && (
-          <View style={styles.currentFolderIndicator}>
-            <Icon name="target" size={moderateScale(12)} color={COLOR.primary} />
+          <View style={getStyles(colors).currentFolderIndicator}>
+            <Icon name="target" size={moderateScale(12)} color={colors.primary} />
           </View>
         )}
       </View>
       
       <TouchableOpacity 
-        style={styles.optionsButton}
+        style={getStyles(colors).optionsButton}
         onPress={handleShowContextMenu}
         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
       >
         <Icon 
           name="dots-horizontal" 
           size={moderateScale(16)} 
-          color={COLOR.textSecondary} 
+          color={colors.textSecondary} 
         />
       </TouchableOpacity>
 
@@ -185,7 +188,7 @@ export const FileItem: React.FC<FileItemProps> = ({
   );
 };
 
-const styles = StyleSheet.create({
+const getStyles = (colors: any) => StyleSheet.create({
   fileItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -195,14 +198,14 @@ const styles = StyleSheet.create({
     minHeight: moderateScale(32),
   },
   fileItemSelected: {
-    backgroundColor: COLOR.primary + '15',
+    backgroundColor: colors.primary + '15',
     borderLeftWidth: 2,
-    borderLeftColor: COLOR.primary,
+    borderLeftColor: colors.primary,
   },
   fileItemCurrentFolder: {
-    backgroundColor: COLOR.primary + '10',
+    backgroundColor: colors.primary + '10',
     borderRightWidth: 3,
-    borderRightColor: COLOR.primary,
+    borderRightColor: colors.primary,
   },
   fileContent: {
     flexDirection: 'row',
@@ -211,24 +214,24 @@ const styles = StyleSheet.create({
     gap: scale(8),
   },
   fileName: {
-    color: COLOR.textPrimary,
+    color: colors.textPrimary,
     fontSize: moderateScale(14),
     fontWeight: '400',
     flex: 1,
   },
   fileNameSelected: {
-    color: COLOR.primary,
+    color: colors.primary,
     fontWeight: '500',
   },
   fileNameCurrentFolder: {
-    color: COLOR.primary,
+    color: colors.primary,
     fontWeight: '600',
   },
   currentFolderIndicator: {
     marginLeft: scale(4),
     padding: moderateScale(2),
     borderRadius: moderateScale(4),
-    backgroundColor: COLOR.primary + '20',
+    backgroundColor: colors.primary + '20',
   },
   optionsButton: {
     padding: moderateScale(4),
