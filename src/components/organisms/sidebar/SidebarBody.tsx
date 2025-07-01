@@ -35,7 +35,7 @@ export const SidebarBody: React.FC<SidebarBodyProps> = ({
   onRenameFile,
   onDeleteFile
 }) => {
-  console.log('🔧 SidebarBody: Received onSetCurrentFolder:', typeof onSetCurrentFolder);
+  // Removemos el log que se ejecuta en cada render
 
   const [renameModalVisible, setRenameModalVisible] = useState(false);
   const [fileToRename, setFileToRename] = useState<FileItemType | null>(null);

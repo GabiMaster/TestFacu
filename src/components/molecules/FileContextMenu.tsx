@@ -3,14 +3,14 @@ import { Icon } from '@/src/constants/icons';
 import { FileItem } from '@/src/hooks/sidebar/useSidebar';
 import React from 'react';
 import {
-  Alert,
-  Modal,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Alert,
+    Modal,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { moderateScale, verticalScale } from 'react-native-size-matters';
+import { moderateScale } from 'react-native-size-matters';
 
 interface FileContextMenuProps {
   visible: boolean;

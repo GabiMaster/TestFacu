@@ -17,6 +17,8 @@ interface SidebarHeaderProps {
   onNewFolder: () => void;
   onRefresh: () => void;
   onImport: () => void;
+  onPaste: () => void;
+  hasClipboardContent: boolean;
   currentFolder?: FileItem | null;
   onClearCurrentFolder?: () => void;
 }
@@ -27,6 +29,8 @@ export const SidebarHeader: React.FC<SidebarHeaderProps> = ({
   onNewFolder,
   onRefresh,
   onImport,
+  onPaste,
+  hasClipboardContent,
   currentFolder,
   onClearCurrentFolder
 }) => {
@@ -101,6 +105,22 @@ export const SidebarHeader: React.FC<SidebarHeaderProps> = ({
           </View>
           
           <View style={styles.headerRight}>
+            <TouchableOpacity 
+              style={[
+                styles.headerButton,
+                !hasClipboardContent && styles.headerButtonDisabled
+              ]}
+              onPress={hasClipboardContent ? onPaste : undefined}
+              disabled={!hasClipboardContent}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            >
+              <Icon 
+                name="content-paste" 
+                size={moderateScale(18)} 
+                color={hasClipboardContent ? COLOR.icon : COLOR.textSecondary} 
+              />
+            </TouchableOpacity>
+            
             <TouchableOpacity 
               style={styles.headerButton}
               onPress={onNewFile}
@@ -223,5 +243,8 @@ const styles = StyleSheet.create({
   headerButton: {
     padding: moderateScale(6),
     borderRadius: moderateScale(4),
+  },
+  headerButtonDisabled: {
+    opacity: 0.5,
   },
 });

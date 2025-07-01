@@ -25,6 +25,11 @@ interface SidebarContextType {
   cutFile: (file: FileItem) => void;
   renameFileOrFolder: (file: FileItem, newName: string) => Promise<void>;
   deleteFileOrFolder: (file: FileItem) => Promise<void>;
+  // Funciones de clipboard
+  pasteFile: () => Promise<void>;
+  hasClipboardContent: () => boolean;
+  // Funciones de actualización programática
+  updateFiles: (files: FileItem[]) => void;
 }
 
 const SidebarContext = createContext<SidebarContextType | undefined>(undefined);

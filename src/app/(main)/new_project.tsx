@@ -1,12 +1,25 @@
 import ButtonComponent from '@/src/components/atoms/ButtonComponent';
 import { Icon } from '@/src/constants/icons';
 import imagePath from '@/src/constants/imagePath';
+import { useProjectContext } from '@/src/utils/contexts/ProjectContext';
+import { useSidebarContext } from '@/src/utils/contexts/SidebarContext';
 import { router, useLocalSearchParams } from 'expo-router';
 import React, { useState } from 'react';
-import { Image, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+    Alert,
+    Image,
+    Modal,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
+} from 'react-native';
 import { moderateScale, verticalScale } from 'react-native-size-matters';
-import { useTheme } from '../../utils/contexts/ThemeContext';
 import { getColorsByTheme } from '../../constants/themeColors';
+import { useTheme } from '../../utils/contexts/ThemeContext';
 
 const LANGUAGES = [
   { name: 'Python', image: imagePath.python },
@@ -21,8 +34,14 @@ const NewProject = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedLanguage, setSelectedLanguage] = useState<null | typeof LANGUAGES[0]>(null);
   const [search, setSearch] = useState('');
+  const [projectName, setProjectName] = useState('');
+  const [projectDescription, setProjectDescription] = useState('');
+  const [isCreating, setIsCreating] = useState(false);
+  
   const { theme } = useTheme();
   const COLOR = getColorsByTheme(theme);
+  const { createProject, openProject } = useProjectContext();
+  const { updateFiles } = useSidebarContext();
 
   const handleBack = () => {
     if (from === 'projects') {
@@ -46,6 +65,47 @@ const NewProject = () => {
     setSearch('');
   };
 
+  const handleCreateProject = async () => {
+    if (!projectName.trim()) {
+      Alert.alert('Error', 'El nombre del proyecto es obligatorio');
+      return;
+    }
+    
+    if (!selectedLanguage) {
+      Alert.alert('Error', 'Debes seleccionar un lenguaje de programación');
+      return;
+    }
+
+    try {
+      setIsCreating(true);
+      
+      // Crear el proyecto
+      const newProject = await createProject(
+        projectName.trim(),
+        projectDescription.trim() || undefined,
+        selectedLanguage.name.toLowerCase(),
+        'custom'
+      );
+      
+      // Abrir el proyecto creado
+      const openedProject = await openProject(newProject);
+      
+      // Actualizar la sidebar con los archivos del proyecto
+      if (openedProject.fileStructure && openedProject.fileStructure.length > 0) {
+        updateFiles(openedProject.fileStructure);
+      }
+      
+      // Navegar al editor
+      router.push('/(editor)/editor');
+      
+    } catch (error) {
+      console.error('❌ Error creating project:', error);
+      Alert.alert('Error', 'No se pudo crear el proyecto. Inténtalo de nuevo.');
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
   return (
     <SafeAreaView style={getStyles(COLOR).container}>
       {/* Header */}
@@ -65,6 +125,34 @@ const NewProject = () => {
         <Text style={getStyles(COLOR).subtitle}>
           Empieza tu aventura en{'\n'}el mundo de la codificación
         </Text>
+        
+        {/* Formulario del proyecto */}
+        <View style={getStyles(COLOR).formContainer}>
+          <View style={getStyles(COLOR).inputGroup}>
+            <Text style={getStyles(COLOR).inputLabel}>Nombre del proyecto *</Text>
+            <TextInput
+              style={getStyles(COLOR).textInput}
+              placeholder="Mi nuevo proyecto"
+              placeholderTextColor={COLOR.textSecondary}
+              value={projectName}
+              onChangeText={setProjectName}
+            />
+          </View>
+          
+          <View style={getStyles(COLOR).inputGroup}>
+            <Text style={getStyles(COLOR).inputLabel}>Descripción (opcional)</Text>
+            <TextInput
+              style={[getStyles(COLOR).textInput, getStyles(COLOR).textAreaInput]}
+              placeholder="Descripción del proyecto..."
+              placeholderTextColor={COLOR.textSecondary}
+              value={projectDescription}
+              onChangeText={setProjectDescription}
+              multiline
+              numberOfLines={3}
+            />
+          </View>
+        </View>
+        
         <TouchableOpacity
           style={getStyles(COLOR).selectLanguageButton}
           onPress={() => setShowModal(true)}
@@ -80,14 +168,9 @@ const NewProject = () => {
         </TouchableOpacity>
         <View style={getStyles(COLOR).continueButtonWrapper}>
           <ButtonComponent
-            title="Continuar"
-            disabled={!selectedLanguage}
-            onPress={() =>
-              router.push({
-                pathname: '/(editor)/editor',
-                params: { language: selectedLanguage?.name }
-              })
-            }
+            title={isCreating ? "Creando proyecto..." : "Crear Proyecto"}
+            disabled={!selectedLanguage || !projectName.trim() || isCreating}
+            onPress={handleCreateProject}
           />
         </View>
       </View>
@@ -220,6 +303,33 @@ function getStyles(COLOR: any) {
     continueButtonWrapper: {
       width: '90%',
       marginTop: verticalScale(24),
+    },
+    formContainer: {
+      width: '100%',
+      marginVertical: verticalScale(20),
+    },
+    inputGroup: {
+      marginBottom: verticalScale(16),
+    },
+    inputLabel: {
+      color: COLOR.textPrimary,
+      fontSize: moderateScale(14),
+      fontWeight: '600',
+      marginBottom: verticalScale(8),
+    },
+    textInput: {
+      backgroundColor: COLOR.surface,
+      borderRadius: moderateScale(8),
+      paddingHorizontal: moderateScale(16),
+      paddingVertical: verticalScale(12),
+      color: COLOR.textPrimary,
+      fontSize: moderateScale(16),
+      borderWidth: 1,
+      borderColor: COLOR.border,
+    },
+    textAreaInput: {
+      height: verticalScale(80),
+      textAlignVertical: 'top',
     },
     // Modal styles
     modalOverlay: {

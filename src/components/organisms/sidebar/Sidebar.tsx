@@ -1,5 +1,5 @@
-import { COLOR } from '@/src/constants/colors';
 import { InputModal } from '@/src/components/molecules/InputModal';
+import { COLOR } from '@/src/constants/colors';
 import { useSidebarContext } from '@/src/utils/contexts/SidebarContext';
 import { router } from 'expo-router';
 import React, { useEffect, useRef, useState } from 'react';
@@ -43,7 +43,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
     cutFile,
     renameFileOrFolder,
     deleteFileOrFolder,
-    importFile
+    importFile,
+    pasteFile,
+    hasClipboardContent
   } = useSidebarContext();
 
   const slideAnim = useRef(new Animated.Value(-SIDEBAR_WIDTH)).current;
@@ -149,6 +151,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
     }
   };
 
+  const handlePaste = async () => {
+    try {
+      console.log('📋 Pegando archivo...');
+      await pasteFile();
+      console.log('✅ Archivo pegado correctamente');
+      
+      // Mostrar mensaje de éxito
+      const location = currentFolder ? `en "${currentFolder.name}"` : 'en la raíz';
+      Alert.alert('✅ Pegado', `El elemento se pegó correctamente ${location}.`);
+    } catch (error) {
+      console.error('❌ Error al pegar archivo:', error);
+      Alert.alert('Error', error instanceof Error ? error.message : 'No se pudo pegar el elemento');
+    }
+  };
+
   const handleSettings = () => {
     console.log('Configuración del explorador');
   };
@@ -159,7 +176,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
 
   // Renderizar contenido según la vista actual
   const renderSidebarContent = () => {
-    console.log('🔧 Sidebar: renderSidebarContent called with currentView:', currentView);
+    // Removemos el log que se ejecuta en cada render
     switch (currentView) {
       case 'home':
         return <SidebarHomeView onClose={closeSidebar} />;
@@ -263,6 +280,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ children }) => {
           onNewFolder={handleNewFolder}
           onRefresh={handleRefresh}
           onImport={handleImport}
+          onPaste={handlePaste}
+          hasClipboardContent={hasClipboardContent()}
           currentFolder={currentFolder}
           onClearCurrentFolder={() => setCurrentFolder(null)}
         />

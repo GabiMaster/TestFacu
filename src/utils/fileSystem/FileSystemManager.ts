@@ -364,6 +364,13 @@ export class FileSystemManager {
   }
 
   /**
+   * Verifica si hay contenido en el portapapeles
+   */
+  static hasClipboardContent(): boolean {
+    return this.clipboard !== null;
+  }
+
+  /**
    * Renombra un archivo o carpeta
    */
   static async renameFileOrFolder(
@@ -450,4 +457,128 @@ export class FileSystemManager {
 
   // ==================== EXISTING OPERATIONS ====================
 
+  /**
+   * Pega un archivo/carpeta desde el portapapeles
+   */
+  static async pasteFromClipboard(
+    files: FileItem[], 
+    targetFolderPath?: string
+  ): Promise<FileItem[]> {
+    try {
+      if (!this.clipboard) {
+        console.log('❌ No hay elementos en el portapapeles');
+        throw new Error('No hay elementos para pegar');
+      }
+
+      console.log('📋 Pasting from clipboard:', this.clipboard.file.name, 'operation:', this.clipboard.operation);
+      
+      const { file: clipboardFile, operation } = this.clipboard;
+      
+      // Generar nuevo ID para evitar duplicados
+      const newId = Date.now().toString();
+      const newName = operation === 'copy' ? `${clipboardFile.name} - copia` : clipboardFile.name;
+      
+      // Crear el nuevo archivo/carpeta
+      const newItem: FileItem = {
+        ...clipboardFile,
+        id: newId,
+        name: newName,
+        path: targetFolderPath ? `${targetFolderPath}/${newName}` : `/${newName}`,
+        children: clipboardFile.children ? await this.duplicateChildren(clipboardFile.children, `${targetFolderPath || ''}/${newName}`) : undefined
+      };
+
+      console.log('📄 Creating pasted item:', newItem);
+
+      // Si es una copia de archivo, duplicar su contenido
+      if (operation === 'copy' && clipboardFile.type === 'file') {
+        try {
+          const originalContent = await this.loadFileContent(clipboardFile.id);
+          await this.saveFileContent(newId, originalContent);
+          console.log('✅ File content duplicated successfully');
+        } catch (error) {
+          console.warn('⚠️ Could not duplicate file content:', error);
+        }
+      }
+
+      // Agregar el elemento a la estructura
+      let updatedFiles: FileItem[];
+      
+      if (targetFolderPath) {
+        // Agregar a la carpeta especificada
+        updatedFiles = this.addToFolder(files, targetFolderPath, newItem);
+      } else {
+        // Agregar a la raíz
+        updatedFiles = [...files, newItem];
+      }
+
+      // Si es un corte, eliminar el original
+      if (operation === 'cut') {
+        console.log('✂️ Removing original item after cut');
+        updatedFiles = await this.deleteFileOrFolder(updatedFiles, clipboardFile.id);
+        // Limpiar el portapapeles después de cortar
+        this.clearClipboard();
+      }
+
+      // Guardar la estructura actualizada
+      await this.saveFileStructure(updatedFiles);
+      
+      console.log('✅ Paste operation completed successfully');
+      return updatedFiles;
+    } catch (error) {
+      console.error('❌ Error pasting from clipboard:', error);
+      throw new Error(`No se pudo pegar el elemento: ${error}`);
+    }
+  }
+
+  /**
+   * Duplica los hijos de una carpeta para operaciones de copia
+   */
+  private static async duplicateChildren(children: FileItem[], parentPath: string): Promise<FileItem[]> {
+    const duplicatedChildren: FileItem[] = [];
+    
+    for (const child of children) {
+      const newChildId = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+      const newChild: FileItem = {
+        ...child,
+        id: newChildId,
+        path: `${parentPath}/${child.name}`,
+        children: child.children ? await this.duplicateChildren(child.children, `${parentPath}/${child.name}`) : undefined
+      };
+      
+      // Si es un archivo, duplicar su contenido
+      if (child.type === 'file') {
+        try {
+          const content = await this.loadFileContent(child.id);
+          await this.saveFileContent(newChildId, content);
+        } catch (error) {
+          console.warn('⚠️ Could not duplicate child file content:', error);
+        }
+      }
+      
+      duplicatedChildren.push(newChild);
+    }
+    
+    return duplicatedChildren;
+  }
+
+  /**
+   * Agrega un elemento a una carpeta específica
+   */
+  private static addToFolder(files: FileItem[], targetFolderPath: string, newItem: FileItem): FileItem[] {
+    return files.map(file => {
+      if (file.path === targetFolderPath && file.type === 'folder') {
+        console.log('📂 Adding item to folder:', file.name);
+        return {
+          ...file,
+          children: [...(file.children || []), newItem]
+        };
+      } else if (file.children) {
+        return {
+          ...file,
+          children: this.addToFolder(file.children, targetFolderPath, newItem)
+        };
+      }
+      return file;
+    });
+  }
 }

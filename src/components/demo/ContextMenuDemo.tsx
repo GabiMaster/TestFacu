@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { FileItem } from '../molecules/FileItem';
-import { FileItem as FileItemType } from '@/src/hooks/sidebar/useSidebar';
 import { COLOR } from '@/src/constants/colors';
+import { FileItem as FileItemType } from '@/src/hooks/sidebar/useSidebar';
+import React, { useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import { moderateScale, verticalScale } from 'react-native-size-matters';
+import { FileItem } from '../molecules/FileItem';
 
 export const ContextMenuDemo: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<FileItemType | null>(null);

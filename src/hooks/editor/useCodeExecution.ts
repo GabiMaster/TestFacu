@@ -84,7 +84,8 @@ export const useCodeExecution = ({ onOutput }: UseCodeExecutionProps = {}) => {
     } finally {
       setIsExecuting(false);
     }
-  }, [isExecuting, onOutput]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isExecuting]);
 
   // Simulador de Python
   const executePython = async (code: string): Promise<ExecutionResult> => {
@@ -158,36 +159,217 @@ export const useCodeExecution = ({ onOutput }: UseCodeExecutionProps = {}) => {
     }
   };
 
-  // Simulador de JavaScript
+  // Ejecutor completamente reescrito de JavaScript
   const executeJavaScript = async (code: string): Promise<ExecutionResult> => {
     await new Promise(resolve => setTimeout(resolve, 600));
     
     const output: string[] = [];
     const errors: string[] = [];
     
-    // Mock console para capturar logs
-    const mockConsole = {
-      log: (...args: any[]) => {
-        const message = args.map(arg => 
-          typeof arg === 'string' ? arg : JSON.stringify(arg)
-        ).join(' ');
-        output.push(message);
-      },
-      error: (...args: any[]) => {
-        const message = args.map(arg => 
-          typeof arg === 'string' ? arg : JSON.stringify(arg)
-        ).join(' ');
-        errors.push(message);
-      }
-    };
-
     try {
-      // Reemplazar console con nuestro mock
-      const safeCode = code.replace(/console\./g, 'mockConsole.');
+      // Crear mocks para APIs del navegador/DOM
+      const mockConsole = {
+        log: (...args: any[]) => {
+          const message = args.map(arg => 
+            typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+          ).join(' ');
+          output.push(message);
+        },
+        error: (...args: any[]) => {
+          const message = args.map(arg => 
+            typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+          ).join(' ');
+          errors.push(`Console Error: ${message}`);
+        },
+        warn: (...args: any[]) => {
+          const message = args.map(arg => 
+            typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+          ).join(' ');
+          output.push(`Console Warn: ${message}`);
+        }
+      };
+
+      // Mock para Canvas 2D Context
+      const mockCanvas2D = {
+        fillStyle: '#000000',
+        strokeStyle: '#000000',
+        font: '10px sans-serif',
+        lineWidth: 1,
+        globalAlpha: 1,
+        fillRect: (x: number, y: number, w: number, h: number) => {
+          output.push(`🎨 Dibujando rectángulo relleno en (${x}, ${y}) tamaño ${w}x${h}`);
+        },
+        strokeRect: (x: number, y: number, w: number, h: number) => {
+          output.push(`🎨 Dibujando rectángulo contorno en (${x}, ${y}) tamaño ${w}x${h}`);
+        },
+        clearRect: (x: number, y: number, w: number, h: number) => {
+          output.push(`🧹 Limpiando área (${x}, ${y}) tamaño ${w}x${h}`);
+        },
+        fillText: (text: string, x: number, y: number) => {
+          output.push(`📝 Texto "${text}" en (${x}, ${y})`);
+        },
+        beginPath: () => output.push('🎨 Iniciando nuevo trazado'),
+        closePath: () => output.push('🎨 Cerrando trazado'),
+        moveTo: (x: number, y: number) => output.push(`🎨 Moviendo a (${x}, ${y})`),
+        lineTo: (x: number, y: number) => output.push(`🎨 Línea a (${x}, ${y})`),
+        stroke: () => output.push('🎨 Trazando líneas'),
+        fill: () => output.push('🎨 Rellenando forma'),
+        arc: (x: number, y: number, radius: number, startAngle: number, endAngle: number) => {
+          output.push(`🎨 Arco en (${x}, ${y}) radio ${radius}`);
+        },
+        save: () => output.push('💾 Guardando estado del canvas'),
+        restore: () => output.push('🔄 Restaurando estado del canvas')
+      };
+
+      // Mock para elementos DOM
+      const mockCanvas = {
+        getContext: (type: string) => {
+          if (type === '2d') {
+            return mockCanvas2D;
+          }
+          return null;
+        },
+        width: 400,
+        height: 400,
+        style: {}
+      };
+
+      const mockDocument = {
+        getElementById: (id: string) => {
+          output.push(`🔍 Buscando elemento con ID: ${id}`);
+          if (id === 'gc' || id === 'game' || id === 'canvas') {
+            return mockCanvas;
+          }
+          return null;
+        },
+        addEventListener: (event: string, handler: Function) => {
+          output.push(`👂 Event listener agregado para: ${event}`);
+          // Simular algunos eventos inmediatamente para testing
+          if (event === 'DOMContentLoaded') {
+            setTimeout(() => {
+              try {
+                handler();
+              } catch (e) {
+                errors.push(`Error en event handler: ${e}`);
+              }
+            }, 100);
+          }
+        },
+        removeEventListener: (event: string, handler: Function) => {
+          output.push(`🚫 Event listener removido para: ${event}`);
+        },
+        readyState: 'complete',
+        body: {
+          addEventListener: (event: string, handler: Function) => {
+            output.push(`👂 Body event listener para: ${event}`);
+          }
+        }
+      };
+
+      const mockWindow = {
+        addEventListener: (event: string, handler: Function) => {
+          output.push(`🪟 Window event listener para: ${event}`);
+          if (event === 'load' || event === 'DOMContentLoaded') {
+            setTimeout(() => {
+              try {
+                handler();
+              } catch (e) {
+                errors.push(`Error en window event: ${e}`);
+              }
+            }, 50);
+          }
+          if (event === 'keydown' || event === 'keyup') {
+            // Simular algunas teclas para testing
+            setTimeout(() => {
+              try {
+                const mockEvent = { key: 'ArrowUp', keyCode: 38, preventDefault: () => {} };
+                handler(mockEvent);
+              } catch {
+                // Ignorar errores de eventos simulados
+              }
+            }, 200);
+          }
+        },
+        requestAnimationFrame: (callback: Function) => {
+          output.push('🎬 Frame de animación solicitado');
+          setTimeout(() => {
+            try {
+              callback(Date.now());
+            } catch (e) {
+              errors.push(`Error en animation frame: ${e}`);
+            }
+          }, 16); // ~60fps
+          return 1;
+        },
+        cancelAnimationFrame: (id: number) => {
+          output.push('🛑 Cancelando frame de animación');
+        }
+      };
+
+      // Función para crear un sandbox más seguro
+      const createSandbox = () => {
+        return {
+          console: mockConsole,
+          document: mockDocument,
+          window: mockWindow,
+          setTimeout: (callback: Function, delay: number) => {
+            output.push(`⏰ Timer configurado para ${delay}ms`);
+            return setTimeout(callback, Math.min(delay, 1000)); // Limitar delays
+          },
+          setInterval: (callback: Function, delay: number) => {
+            output.push(`🔄 Intervalo configurado para ${delay}ms`);
+            return setInterval(callback, Math.max(delay, 100)); // Limitar frecuencia
+          },
+          clearTimeout: (id: any) => {
+            output.push('⏰ Timer cancelado');
+            clearTimeout(id);
+          },
+          clearInterval: (id: any) => {
+            output.push('🔄 Intervalo cancelado');
+            clearInterval(id);
+          },
+          Math: Math,
+          Date: Date,
+          Object: Object,
+          Array: Array,
+          JSON: JSON,
+          parseInt: parseInt,
+          parseFloat: parseFloat,
+          isNaN: isNaN,
+          Number: Number,
+          String: String,
+          Boolean: Boolean
+        };
+      };
+
+      // Preparar el código - método más robusto sin 'with'
+      const sandbox = createSandbox();
       
-      // Crear función y ejecutar
-      const func = new Function('mockConsole', safeCode);
-      func(mockConsole);
+      // Crear lista de variables del sandbox para la función
+      const sandboxKeys = Object.keys(sandbox);
+      const sandboxValues = sandboxKeys.map(key => (sandbox as any)[key]);
+      
+      // Crear función que ejecuta el código en el contexto del sandbox
+      const wrappedCode = `
+        "use strict";
+        try {
+          ${code}
+        } catch (error) {
+          console.error("Execution error:", error.message);
+          throw error;
+        }
+      `;
+      
+      // Ejecutar usando Function constructor con parámetros explícitos
+      const executeFunction = new Function(...sandboxKeys, wrappedCode);
+      
+      // Ejecutar el código
+      executeFunction(...sandboxValues);
+      
+      // Si llegamos aquí, la ejecución fue exitosa
+      if (output.length === 0) {
+        output.push('✅ Código ejecutado correctamente (sin salida visible)');
+      }
       
       return {
         output,
@@ -197,9 +379,24 @@ export const useCodeExecution = ({ onOutput }: UseCodeExecutionProps = {}) => {
       };
       
     } catch (error) {
+      // Manejar diferentes tipos de errores
+      let errorMessage = 'Error desconocido';
+      
+      if (error instanceof SyntaxError) {
+        errorMessage = `Syntax Error: ${error.message}`;
+      } else if (error instanceof ReferenceError) {
+        errorMessage = `Reference Error: ${error.message}`;
+      } else if (error instanceof TypeError) {
+        errorMessage = `Type Error: ${error.message}`;
+      } else {
+        errorMessage = `Runtime Error: ${error}`;
+      }
+      
+      errors.push(errorMessage);
+      
       return {
         output,
-        errors: [`Error de JavaScript: ${error}`],
+        errors,
         success: false,
         executionTime: 0
       };
@@ -264,40 +461,118 @@ export const useCodeExecution = ({ onOutput }: UseCodeExecutionProps = {}) => {
     }
   };
 
-  // Simulador de HTML
+  // Ejecutor mejorado de HTML (especialmente para juegos)
   const executeHtml = async (code: string): Promise<ExecutionResult> => {
     await new Promise(resolve => setTimeout(resolve, 400));
     
     const output: string[] = [];
+    const errors: string[] = [];
     
-    output.push('HTML renderizado exitosamente');
-    output.push('Elementos encontrados:');
-    
-    // Analizar elementos HTML
-    const titleMatch = code.match(/<title>(.*?)<\/title>/);
-    if (titleMatch) {
-      output.push(`- Título: ${titleMatch[1]}`);
+    try {
+      output.push('🎮 Analizando aplicación HTML...');
+      
+      // Detectar elementos del juego
+      if (code.includes('<canvas')) {
+        const canvasMatch = code.match(/<canvas[^>]*id=["']([^"']+)["'][^>]*>/);
+        if (canvasMatch) {
+          output.push(`✅ Canvas encontrado: ID="${canvasMatch[1]}"`);
+        }
+        
+        const dimensionsMatch = code.match(/width=["']?(\d+)["']?[^>]*height=["']?(\d+)["']?/);
+        if (dimensionsMatch) {
+          output.push(`📐 Dimensiones: ${dimensionsMatch[1]}x${dimensionsMatch[2]}px`);
+        }
+      }
+      
+      // Detectar scripts
+      const scriptMatches = code.match(/<script[^>]*src=["']([^"']+)["'][^>]*>/g);
+      if (scriptMatches) {
+        scriptMatches.forEach(script => {
+          const srcMatch = script.match(/src=["']([^"']+)["']/);
+          if (srcMatch) {
+            output.push(`📄 Script externo: ${srcMatch[1]}`);
+          }
+        });
+      }
+      
+      // Detectar CSS
+      const cssMatches = code.match(/<link[^>]*href=["']([^"']+\.css)["'][^>]*>/g);
+      if (cssMatches) {
+        cssMatches.forEach(link => {
+          const hrefMatch = link.match(/href=["']([^"']+)["']/);
+          if (hrefMatch) {
+            output.push(`🎨 Hoja de estilos: ${hrefMatch[1]}`);
+          }
+        });
+      }
+      
+      // Detectar controles de juego
+      if (code.includes('onclick=')) {
+        const onclickMatches = code.match(/onclick=["']([^"']+)["']/g);
+        if (onclickMatches) {
+          output.push(`🎯 Controles interactivos encontrados: ${onclickMatches.length}`);
+          onclickMatches.slice(0, 3).forEach(onclick => {
+            const funcMatch = onclick.match(/onclick=["']([^"']+)["']/);
+            if (funcMatch) {
+              output.push(`  • ${funcMatch[1]}`);
+            }
+          });
+        }
+      }
+      
+      // Detectar elementos específicos de juego
+      if (code.includes('class="keys"') || code.includes('class="arr"')) {
+        output.push('🕹️ Controles táctiles detectados');
+      }
+      
+      // Analizar título
+      const titleMatch = code.match(/<title>(.*?)<\/title>/);
+      if (titleMatch) {
+        output.push(`📋 Título: "${titleMatch[1]}"`);
+      }
+      
+      // Detectar si es un juego
+      const gameIndicators = [
+        'snake', 'game', 'canvas', 'onclick', 'keydown', 'score', 'points'
+      ];
+      
+      const foundIndicators = gameIndicators.filter(indicator => 
+        code.toLowerCase().includes(indicator)
+      );
+      
+      if (foundIndicators.length >= 3) {
+        output.push('🎮 ¡Aplicación de juego detectada!');
+        output.push('💡 Sugerencia: Ejecuta los archivos JavaScript y CSS por separado');
+        output.push('🚀 HTML listo para ser renderizado en navegador');
+      }
+      
+      // Verificar estructura básica
+      if (code.includes('<!DOCTYPE html>')) {
+        output.push('✅ Estructura HTML5 válida');
+      }
+      
+      if (code.includes('<meta name="viewport"')) {
+        output.push('📱 Optimizado para dispositivos móviles');
+      }
+      
+      output.push('✨ Análisis completado - HTML listo para ejecución');
+      
+      return {
+        output,
+        errors,
+        success: true,
+        executionTime: 0
+      };
+      
+    } catch (error) {
+      errors.push(`Error analizando HTML: ${error}`);
+      return {
+        output,
+        errors,
+        success: false,
+        executionTime: 0
+      };
     }
-    
-    const h1Match = code.match(/<h1>(.*?)<\/h1>/);
-    if (h1Match) {
-      output.push(`- Encabezado H1: ${h1Match[1]}`);
-    }
-    
-    const pMatches = code.match(/<p>(.*?)<\/p>/g);
-    if (pMatches) {
-      pMatches.forEach((match, index) => {
-        const content = match.match(/<p>(.*?)<\/p>/)?.[1];
-        output.push(`- Párrafo ${index + 1}: ${content}`);
-      });
-    }
-    
-    return {
-      output,
-      errors: [],
-      success: true,
-      executionTime: 0
-    };
   };
 
   // Simulador de MySQL

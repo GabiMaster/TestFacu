@@ -1,8 +1,9 @@
 import { Icon } from '@/src/constants/icons';
 import { useAuth } from '@/src/hooks/useAuth';
+import { useProjectContext } from '@/src/utils/contexts/ProjectContext';
 import { useSidebarContext } from '@/src/utils/contexts/SidebarContext';
 import { router } from 'expo-router';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Alert, Image, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { moderateScale, scale, verticalScale } from 'react-native-size-matters';
 import { getColorsByTheme } from '../../constants/themeColors';
@@ -10,9 +11,16 @@ import { useTheme } from '../../utils/contexts/ThemeContext';
 
 const Home = () => {
   const { user } = useAuth();
-  const { importFile } = useSidebarContext();
+  const { importFile, updateFiles } = useSidebarContext();
+  const { recentProjects, openProject, refreshRecentProjects } = useProjectContext();
   const { theme } = useTheme();
   const COLOR = getColorsByTheme(theme);
+
+  // Cargar proyectos recientes al montar el componente
+  useEffect(() => {
+    refreshRecentProjects();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Solo cargar una vez al montar
 
   // Función para importar archivo
   const handleImportFile = async () => {
@@ -36,6 +44,70 @@ const Home = () => {
         { text: 'Importar Archivos', onPress: handleImportFile }
       ]
     );
+  };
+
+  // Función para abrir un proyecto reciente
+  const handleOpenRecentProject = async (projectId: string) => {
+    try {
+      // Buscar el proyecto completo por ID
+      const ProjectManager = (await import('@/src/utils/project/ProjectManager')).ProjectManager;
+      const project = await ProjectManager.getProjectById(projectId);
+      
+      if (project) {
+        const openedProject = await openProject(project);
+        
+        // Actualizar la sidebar con los archivos del proyecto
+        if (openedProject.fileStructure && openedProject.fileStructure.length > 0) {
+          updateFiles(openedProject.fileStructure);
+        }
+        
+        router.push('/(editor)/editor');
+      } else {
+        Alert.alert('Error', 'No se pudo encontrar el proyecto.');
+      }
+    } catch (error) {
+      console.error('❌ Error opening recent project:', error);
+      Alert.alert('Error', 'No se pudo abrir el proyecto. Inténtalo de nuevo.');
+    }
+  };
+
+  const getLanguageIcon = (language?: string) => {
+    switch (language?.toLowerCase()) {
+      case 'javascript':
+      case 'js':
+        return 'language-javascript';
+      case 'typescript':
+      case 'ts':
+        return 'language-typescript';
+      case 'python':
+      case 'py':
+        return 'language-python';
+      case 'java':
+        return 'language-java';
+      case 'html':
+        return 'language-html5';
+      case 'css':
+        return 'language-css3';
+      case 'react':
+        return 'react';
+      default:
+        return 'file-code-outline';
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
+    
+    if (diffHours < 1) return 'Hace unos minutos';
+    if (diffHours < 24) return `Hace ${diffHours}h`;
+    
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    if (diffDays === 1) return 'Ayer';
+    if (diffDays < 7) return `Hace ${diffDays} días`;
+    return date.toLocaleDateString('es-ES');
   };
 
   return (
@@ -96,13 +168,63 @@ const Home = () => {
 
         {/* Actividad Reciente */}
         <Text style={getStyles(COLOR).sectionTitle}>Actividad Reciente</Text>
-        <View style={getStyles(COLOR).recentActivity}>
-          <Icon name="calendar-blank-outline" size={moderateScale(32)} color={COLOR.icon} />
-          <View style={getStyles(COLOR).activityTextContainer}>
-            <Text style={getStyles(COLOR).activityTitle}>GTA VI</Text>
-            <Text style={getStyles(COLOR).activitySubtitle}>Ultima vez editado hace 3h</Text>
+        {recentProjects.length === 0 ? (
+          <View style={getStyles(COLOR).emptyRecentActivity}>
+            <Icon name="history" size={moderateScale(32)} color={COLOR.textSecondary} />
+            <Text style={getStyles(COLOR).emptyText}>No hay proyectos recientes</Text>
+            <Text style={getStyles(COLOR).emptySubtext}>
+              Los proyectos que abras aparecerán aquí
+            </Text>
           </View>
-        </View>
+        ) : (
+          <View style={getStyles(COLOR).recentActivityList}>
+            {recentProjects.slice(0, 5).map((project) => (
+              <TouchableOpacity
+                key={project.id}
+                style={getStyles(COLOR).recentActivity}
+                onPress={() => handleOpenRecentProject(project.id)}
+                activeOpacity={0.7}
+              >
+                <View style={getStyles(COLOR).recentProjectIcon}>
+                  <Icon 
+                    name={getLanguageIcon(project.language)} 
+                    size={moderateScale(24)} 
+                    color={COLOR.primary} 
+                  />
+                </View>
+                <View style={getStyles(COLOR).activityTextContainer}>
+                  <Text style={getStyles(COLOR).activityTitle} numberOfLines={1}>
+                    {project.name}
+                  </Text>
+                  <Text style={getStyles(COLOR).activitySubtitle}>
+                    Última vez editado {formatDate(project.lastModified)}
+                  </Text>
+                </View>
+                <Icon 
+                  name="chevron-right" 
+                  size={moderateScale(18)} 
+                  color={COLOR.textSecondary} 
+                />
+              </TouchableOpacity>
+            ))}
+            
+            {recentProjects.length > 5 && (
+              <TouchableOpacity 
+                style={getStyles(COLOR).viewAllButton}
+                onPress={() => router.push('/(tabs)/projects')}
+              >
+                <Text style={getStyles(COLOR).viewAllText}>
+                  Ver todos los proyectos ({recentProjects.length})
+                </Text>
+                <Icon 
+                  name="arrow-right" 
+                  size={moderateScale(16)} 
+                  color={COLOR.primary} 
+                />
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
 
         {/* Lenguajes más utilizados */}
         <Text style={getStyles(COLOR).sectionTitle}>Lenguajes más utilizados</Text>
@@ -225,17 +347,53 @@ function getStyles(COLOR: any) {
       marginBottom: verticalScale(18),
       gap: scale(10),
     },
-    activityTextContainer: {
-      marginLeft: scale(10),
+    emptyRecentActivity: {
+      backgroundColor: COLOR.surface,
+      borderRadius: moderateScale(12),
+      paddingVertical: verticalScale(20),
+      paddingHorizontal: moderateScale(14),
+      alignItems: 'center',
+      marginBottom: verticalScale(18),
     },
-    activityTitle: {
+    emptyText: {
       color: COLOR.textPrimary,
       fontSize: moderateScale(16),
-      fontWeight: 'bold',
+      fontWeight: '600',
+      marginTop: verticalScale(8),
+      textAlign: 'center',
     },
-    activitySubtitle: {
+    emptySubtext: {
       color: COLOR.textSecondary,
-      fontSize: moderateScale(13),
+      fontSize: moderateScale(14),
+      marginTop: verticalScale(4),
+      textAlign: 'center',
+    },
+    recentActivityList: {
+      marginBottom: verticalScale(18),
+    },
+    recentProjectIcon: {
+      width: moderateScale(40),
+      height: moderateScale(40),
+      borderRadius: moderateScale(20),
+      backgroundColor: COLOR.primary + '15',
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    viewAllButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: COLOR.surface,
+      borderRadius: moderateScale(8),
+      paddingVertical: verticalScale(10),
+      paddingHorizontal: moderateScale(16),
+      marginTop: verticalScale(8),
+    },
+    viewAllText: {
+      color: COLOR.primary,
+      fontSize: moderateScale(14),
+      fontWeight: '600',
+      marginRight: moderateScale(8),
     },
     languagesList: {
       marginTop: verticalScale(8),
@@ -265,6 +423,20 @@ function getStyles(COLOR: any) {
     languageTime: {
       color: COLOR.textSecondary,
       fontSize: moderateScale(13),
+    },
+    activityTextContainer: {
+      flex: 1,
+      marginLeft: moderateScale(12),
+    },
+    activityTitle: {
+      color: COLOR.textPrimary,
+      fontSize: moderateScale(16),
+      fontWeight: '600',
+    },
+    activitySubtitle: {
+      color: COLOR.textSecondary,
+      fontSize: moderateScale(13),
+      marginTop: verticalScale(2),
     },
   });
 }

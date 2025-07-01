@@ -17,6 +17,7 @@ import { useEditorFile } from '@/src/hooks/editor/useEditorFile';
 
 // Utils
 import { COLOR } from '@/src/constants/colors';
+import { useProjectContext } from '@/src/utils/contexts/ProjectContext';
 import { useSidebarContext } from '@/src/utils/contexts/SidebarContext';
 import { CODE_TEMPLATES, getFileExtension } from '@/src/utils/editor/templates';
 
@@ -25,7 +26,8 @@ const Editor = () => {
   const language = params.language;
   
   // Contexto del sidebar
-  const { openSidebar, selectedFile } = useSidebarContext();
+  const { openSidebar, selectedFile, files } = useSidebarContext();
+  const { currentProject, updateCurrentProjectFiles } = useProjectContext();
   
   // Hook para manejar archivos
   const {

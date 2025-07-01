@@ -19,10 +19,7 @@ export const useSidebar = () => {
   const [selectedFile, setSelectedFile] = useState<FileItem | null>(null);
   const [currentFolder, setCurrentFolder] = useState<FileItem | null>(null); // Carpeta actual
 
-  // Log cuando cambie currentFolder
-  useEffect(() => {
-    console.log('🔧 useSidebar: currentFolder changed to:', currentFolder?.name || 'null');
-  }, [currentFolder]);
+  // Removed excessive logging that was causing console spam
   const [files, setFiles] = useState<FileItem[]>(
     [
       {
@@ -402,6 +399,33 @@ export const useSidebar = () => {
     }
   }, [files, selectedFile, currentFolder]);
 
+  // ==================== CLIPBOARD OPERATIONS ====================
+
+  const pasteFile = useCallback(async () => {
+    try {
+      console.log('📋 Pasting file...');
+      const targetPath = currentFolder?.path || '/';
+      const updatedFiles = await FileSystemManager.pasteFromClipboard(files, targetPath);
+      setFiles(updatedFiles);
+      await saveFileStructure(updatedFiles);
+    } catch (error) {
+      console.error('❌ Error pasting file:', error);
+      throw error;
+    }
+  }, [files, currentFolder, saveFileStructure]);
+
+  const hasClipboardContent = useCallback((): boolean => {
+    return FileSystemManager.hasClipboardContent();
+  }, []);
+
+  // ==================== PROGRAMMATIC FILE UPDATES ====================
+
+  const updateFiles = useCallback((newFiles: FileItem[]) => {
+    console.log('🔄 Updating files programmatically:', newFiles.length, 'files');
+    setFiles(newFiles);
+    saveFileStructure(newFiles);
+  }, [saveFileStructure]);
+
   // ==================== EXISTING OPERATIONS ====================
 
   return {
@@ -428,5 +452,8 @@ export const useSidebar = () => {
     cutFile,
     renameFileOrFolder,
     deleteFileOrFolder,
+    pasteFile,
+    hasClipboardContent,
+    updateFiles,
   };
 };
